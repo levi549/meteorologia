@@ -1,10 +1,10 @@
 version: 2
 
 sources:
-  - name: fonte_supabase     # Apelido lógico para a origem dos dados
-    schema: public           # O schema do Supabase onde a tabela bruta está
+  - name: fonte_supabase    
+    schema: public          
     tables:
-      - name: raw_csv        # O nome EXATO da tabela que já está no banco hoje
+      - name: raw_csv       
         description: "Dados do arquivo csav."
 
       - name: raw_ibge
