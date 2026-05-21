@@ -26,3 +26,7 @@ target/
 
 # UV
 uv.lock
+
+.gitinore
+
+README.md
