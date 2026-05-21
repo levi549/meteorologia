@@ -1,0 +1,25 @@
+name: 'projeto_supabase'
+version: '1.0.0'
+config-version: 2
+
+# Nome do perfil que deve ser idêntico ao do seu arquivo profiles.yml
+profile: 'levi549'
+
+# Aqui dizemos ao dbt onde estão as pastas de modelos
+# Como você separou em 'raw' e 'silver&gold', passamos as duas no array
+model-paths: ["dbt/raw", "dbt/silver_gold"]
+
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Configuração de como os modelos serão salvos por padrão no banco
+models:
+  projeto_supabase:
+    materialized: table

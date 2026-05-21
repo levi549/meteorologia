@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: fct_meteorologia   # O nome do arquivo .sql que você vai criar na Gold
+    description: "Tabela final de meteorologia pronta para análise de BI."
+    columns:
+      - name: id            # Nome da coluna que você quer testar
+        description: "Chave primária do registro."
+        tests:
+          - unique           # O dbt vai testar se existem IDs duplicados
+          - not_null         # O dbt vai testar se existem IDs nulos                              

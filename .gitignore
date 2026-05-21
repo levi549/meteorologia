@@ -1,0 +1,28 @@
+# Ambiente virtual
+.venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+.env
+
+# Logs
+logs/
+
+# Arquivos de ambiente
+.env
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Configuração Python
+.python-version
+
+# DBT
+dbt_packages/
+target/
+
+# UV
+uv.lock
