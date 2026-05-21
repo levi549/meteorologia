@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: fct_meteorologia  
+  - name: teste
     description: "Tabela final de meteorologia pronta para análise de BI."
     columns:
       - name: id           
