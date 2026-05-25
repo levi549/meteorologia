@@ -33,4 +33,5 @@ def main():
     ], outputCol="features")
     df_features=assembler.transform(df)
     kmeans=ML()
-    kmeans.treino(df_features.select("features"))
+    kmeans.treino(df_features)
+
