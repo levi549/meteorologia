@@ -16,7 +16,10 @@ PROPRIEDADES = {
 
 
 def main():
-    df=spark.read.jdbc(
+    try:
+        print("Iniciando o processo de clustering KMeans")
+        
+        df=spark.read.jdbc(
         url=URL_SUPABASE,
         table="public.dados_csv_silver",
         properties=PROPRIEDADES
@@ -24,14 +27,32 @@ def main():
 
 
 
-    assembler=VectorAssembler(inputCols=[
-        "mes_sin",
-        "mes_cos",
-        "temp_padronizado",
-        "humidity_padronizado",
-        "pressure_padronizado"
-    ], outputCol="features")
-    df_features=assembler.transform(df)
-    kmeans=ML()
-    kmeans.treino(df_features)
+        assembler=VectorAssembler(inputCols=[
+            "mes_sin",
+            "mes_cos",
+            "temp_padronizado",
+            "humidity_padronizado",
+            "pressure_padronizado"
+        ], outputCol="features")
+        df_features=assembler.transform(df)
+        kmeans=ML()
+        kmeans.treino(df_features)
+        df_final=kmeans.resultado.select(
+            "id", 
+            "mes_sin",
+            "mes_cos",
+            "temp_padronizado",
+            "humidity_padronizado",
+            "pressure_padronizado",
+            "prediction")
+        df_final.write.jdbc(
+            url=URL_SUPABASE,
+            table="public.kmeans_resultado",
+            mode="overwrite",
+            properties=PROPRIEDADES
+        )
 
+
+    except Exception as e:
+        print(f"Erro ao executar o processo de clustering KMeans: {e}")
+        raise e
