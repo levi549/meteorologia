@@ -19,9 +19,21 @@ def main():
     try:
         print("Iniciando o processo de clustering KMeans")
         
+        limites = spark.read.jdbc(
+            url=URL_SUPABASE,
+            table="(SELECT MIN(id) as min_id, MAX(id) as max_id FROM public.dados_csv_silver) as limites",
+            properties=PROPRIEDADES
+        ).collect()[0]
+        
+        v_min = limites["min_id"] 
+        v_max = limites["max_id"] 
+
         df=spark.read.jdbc(
         url=URL_SUPABASE,
         table="public.dados_csv_silver",
+        lowerBound=v_min,
+        upperBound=v_max,
+        numPartitions=10,
         properties=PROPRIEDADES
     )
 
