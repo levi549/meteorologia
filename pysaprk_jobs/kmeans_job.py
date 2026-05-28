@@ -14,8 +14,7 @@ PROPRIEDADES = {
     "password": os.getenv("SUPABASE_PASSWORD"),
     "driver": "org.postgresql.Driver"}
 
-
-def main():
+def job_kmeans():
     try:
         print("Iniciando o processo de clustering KMeans")
         
@@ -51,6 +50,7 @@ def main():
         kmeans.treino(df_features)
         df_final=kmeans.resultado.select(
             'id',
+            "anomaly_name",
             "mes_sin",
             "mes_cos",
             "temp_padronizado",
@@ -73,3 +73,12 @@ def main():
     except Exception as e:
         print(f"Erro ao executar o processo de clustering KMeans: {e}")
         raise e
+def job_ml_supervisionado():
+    pass
+def main():
+    try:
+        job_kmeans()
+        job_ml_supervisionado()
+    except Exception as e:
+        print(f"Erro ao executar o processo de clustering KMeans: {e}")
+        raise egi
