@@ -1,7 +1,7 @@
 from pyspark.ml.clustering import KMeans
 class ML:
     def __init__(self):
-        self.kmeans = KMeans(featuresCol="features", k=3, seed=0)
+        self.kmeans = KMeans(featuresCol="features",predictionCol="prediction", k=3, seed=0)
 
     def treino(self, data):
         try:

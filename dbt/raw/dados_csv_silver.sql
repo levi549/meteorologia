@@ -6,8 +6,7 @@ with dados_raw_csv as (
 
 
 SELECT 
-    {{ dbt_utils.generate_surrogate_key(['city_id', 'city_name']) }} AS id, 
-    city_id,
+    {{ dbt_utils.generate_surrogate_key(['city_id', 'dt']) }} AS id, 
     city_name,
     SIN(EXTRACT(MONTH FROM dt::DATE) * 2 * PI() / 12) AS mes_sin,
     COS(EXTRACT(MONTH FROM dt::DATE) * 2 * PI() / 12) AS mes_cos,

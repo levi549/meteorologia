@@ -31,14 +31,14 @@ def main():
         df=spark.read.jdbc(
         url=URL_SUPABASE,
         table="public.dados_csv_silver",
+        column="id",
         lowerBound=v_min,
         upperBound=v_max,
         numPartitions=10,
         properties=PROPRIEDADES
     )
-
-
-
+       
+        df = df.dropna()
         assembler=VectorAssembler(inputCols=[
             "mes_sin",
             "mes_cos",
@@ -50,20 +50,25 @@ def main():
         kmeans=ML()
         kmeans.treino(df_features)
         df_final=kmeans.resultado.select(
-            "id", 
+            'id',
             "mes_sin",
             "mes_cos",
             "temp_padronizado",
             "humidity_padronizado",
             "pressure_padronizado",
-            "prediction")
+            "prediction").withColumn(
+                "Nivel_de_risco", F.when(F.col("prediction") == 0, "Baixo") \
+                 .when(F.col("prediction") == 1, "Médio") \
+                 .otherwise("Alto")
+                ).drop("prediction")
+
         df_final.write.jdbc(
             url=URL_SUPABASE,
             table="public.kmeans_resultado",
             mode="overwrite",
             properties=PROPRIEDADES
         )
-
+        print("Processo de clustering KMeans concluído com sucesso.")
 
     except Exception as e:
         print(f"Erro ao executar o processo de clustering KMeans: {e}")
