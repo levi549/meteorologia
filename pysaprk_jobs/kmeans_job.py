@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 from pyspark.ml.feature import  VectorAssembler
 import os
 from src.ML import ML
+from pyspark.sql.window import Window
 spark = SparkSession.builder \
     .appName("KMeans_Clustering") \
     .config("spark.jars.packages", "org.postgresql:postgresql:42.7.2") \
@@ -36,8 +37,20 @@ def job_kmeans():
         numPartitions=10,
         properties=PROPRIEDADES
     )
-       
+        janela=Window.partitionBy('city_id')
         df = df.dropna()
+        df_padronizado=df.withColumn("temp", (F.col("temp") - F.mean("temp").over(janela)) / F.stddev("temp").over(janela)) \
+            .withColumn("humidity", (F.col("humidity") - F.mean("humidity").over(janela)) / F.stddev("humidity").over(janela)) \
+            .withColumn("pressure", (F.col("pressure") - F.mean("pressure").over(janela)) / F.stddev("pressure").over(janela))
+        df_padronizado=df_padronizado.select(
+            "id",
+            "anomaly_name",
+            "mes_sin",
+            "mes_cos",
+            F.col("temp").alias("temp_padronizado"),
+            F.col("humidity").alias("humidity_padronizado"),
+            F.col("pressure").alias("pressure_padronizado")
+        )
         assembler=VectorAssembler(inputCols=[
             "mes_sin",
             "mes_cos",
@@ -45,7 +58,7 @@ def job_kmeans():
             "humidity_padronizado",
             "pressure_padronizado"
         ], outputCol="features")
-        df_features=assembler.transform(df)
+        df_features=assembler.transform(df_padronizado)
         kmeans=ML()
         kmeans.treino(df_features)
         df_final=kmeans.resultado.select(
@@ -81,4 +94,4 @@ def main():
         job_ml_supervisionado()
     except Exception as e:
         print(f"Erro ao executar o processo de clustering KMeans: {e}")
-        raise egi
+        raise e
