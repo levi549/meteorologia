@@ -7,6 +7,7 @@ from pyspark.sql.window import Window
 spark = SparkSession.builder \
     .appName("KMeans_Clustering") \
     .config("spark.jars.packages", "org.postgresql:postgresql:42.7.2") \
+    .config("spark.sql.shuffle.partitions", "10") \
     .getOrCreate()
 
 URL_SUPABASE =os.getenv("SUPABASE_POSTGRESQL_URL")
