@@ -40,18 +40,13 @@ def job_kmeans():
     )
         janela=Window.partitionBy('city_id')
         df = df.dropna()
-        df_padronizado=df.withColumn("temp", (F.col("temp") - F.mean("temp").over(janela)) / F.stddev("temp").over(janela)) \
-            .withColumn("humidity", (F.col("humidity") - F.mean("humidity").over(janela)) / F.stddev("humidity").over(janela)) \
-            .withColumn("pressure", (F.col("pressure") - F.mean("pressure").over(janela)) / F.stddev("pressure").over(janela))
-        df_padronizado=df_padronizado.select(
-            "id",
-            "anomaly_name",
-            "mes_sin",
-            "mes_cos",
-            F.col("temp").alias("temp_padronizado"),
-            F.col("humidity").alias("humidity_padronizado"),
-            F.col("pressure").alias("pressure_padronizado")
-        )
+        df_padronizado=df.withColumn("temp_padronizado", F.when(F.stddev("temp").over(janela) == 0,0.0)\
+            .otherwise((F.col("temp") - F.mean("temp").over(janela)) / F.stddev("temp").over(janela))) \
+            .withColumn("humidity_padronizado", F.when(F.stddev("humidity").over(janela) == 0,0.0)\
+            .otherwise((F.col("humidity") - F.mean("humidity").over(janela)) / F.stddev("humidity").over(janela))) \
+            .withColumn("pressure_padronizado", F.when(F.stddev("pressure").over(janela) == 0,0.0)\
+            .otherwise((F.col("pressure") - F.mean("pressure").over(janela)) / F.stddev("pressure").over(janela)))
+        
         assembler=VectorAssembler(inputCols=[
             "mes_sin",
             "mes_cos",
@@ -67,9 +62,9 @@ def job_kmeans():
             "anomaly_name",
             "mes_sin",
             "mes_cos",
-            "temp_padronizado",
-            "humidity_padronizado",
-            "pressure_padronizado",
+            "temp",
+            "humidity",
+            "pressure",
             "prediction").withColumn(
                 "Nivel_de_risco", F.when(F.col("prediction") == 0, "Baixo") \
                  .when(F.col("prediction") == 1, "Médio") \
