@@ -1,22 +1,8 @@
-from pyspark.sql import SparkSession
+from src.ML import ML
 from pyspark.sql import functions as F
 from pyspark.ml.feature import  VectorAssembler
-import os
-from src.ML import ML
 from pyspark.sql.window import Window
-spark = SparkSession.builder \
-    .appName("KMeans_Clustering") \
-    .config("spark.jars.packages", "org.postgresql:postgresql:42.7.2") \
-    .config("spark.sql.shuffle.partitions", "10") \
-    .getOrCreate()
-
-URL_SUPABASE =os.getenv("SUPABASE_POSTGRESQL_URL")
-PROPRIEDADES = {
-    "user": "postgres",
-    "password": os.getenv("SUPABASE_PASSWORD"),
-    "driver": "org.postgresql.Driver"}
-
-def job_kmeans():
+def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
     try:
         print("Iniciando o processo de clustering KMeans")
         
@@ -79,15 +65,6 @@ def job_kmeans():
         )
         print("Processo de clustering KMeans concluído com sucesso.")
 
-    except Exception as e:
-        print(f"Erro ao executar o processo de clustering KMeans: {e}")
-        raise e
-def job_ml_supervisionado():
-    pass
-def main():
-    try:
-        job_kmeans()
-        job_ml_supervisionado()
     except Exception as e:
         print(f"Erro ao executar o processo de clustering KMeans: {e}")
         raise e
