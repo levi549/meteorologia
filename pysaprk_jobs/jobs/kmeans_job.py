@@ -1,4 +1,4 @@
-from src.ML import ML
+from src.ML import ML_kmeans
 from pyspark.sql import functions as F
 from pyspark.ml.feature import  VectorAssembler
 from pyspark.sql.window import Window
@@ -41,7 +41,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
             "pressure_padronizado"
         ], outputCol="features")
         df_features=assembler.transform(df_padronizado)
-        kmeans=ML()
+        kmeans=ML_kmeans()
         kmeans.treino(df_features)
         df_final=kmeans.resultado.select(
             'id',
@@ -57,7 +57,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
                  .otherwise("Alto")
                 ).drop("prediction")
 
-        df_final.write.jdbc(
+        df_final.coalesce(1).write.jdbc(
             url=URL_SUPABASE,
             table="public.kmeans_resultado",
             mode="overwrite",
