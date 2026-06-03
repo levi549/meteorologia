@@ -22,7 +22,8 @@ with dados_raw_csv as (
 
 
 SELECT 
-    {{ dbt_utils.generate_surrogate_key(['city_id', 'dt']) }} AS id, 
+    {{ dbt_utils.generate_surrogate_key(['city_id', 'dt']) }} AS id,
+    id_referencia BIGINT GENERATED ALWAYS AS IDENTITY ,
     city_name,
     mes_sin,
     mes_cos,

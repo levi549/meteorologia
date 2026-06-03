@@ -3,13 +3,42 @@ def job_ml_supervisionado(URL_SUPABASE, PROPRIEDADES, spark):
     try:
         print("Iniciando o processo de classificação supervisionada")
    
-        limite=spark.read.jdbc(
+        limites = spark.read.jdbc(
             url=URL_SUPABASE,
-            table="(SELECT MIN(id) as min_id, MAX(id) as max_id FROM public.kmeans_resultado) as limite",
+            table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
             properties=PROPRIEDADES
         ).first()
-        v_min = limite["min_id"]
-        v_max = limite["max_id"]
+        
+        v_min = limites["min_id"] 
+        v_max = limites["max_id"] 
+
+        df=spark.read.jdbc(
+        url=URL_SUPABASE,
+        table="public.kmeans_resultado",
+        column="id_referencia",
+        lowerBound=v_min,
+        upperBound=v_max,
+        numPartitions=10,
+        properties=PROPRIEDADES
+    ).dropna()
+        assembler=VectorAssembler(inputCols=[
+            "mes_sin",
+            "mes_cos",
+            "temp",
+            "humidity",
+            "pressure",
+            "Nivel_de_risco"
+        ], outputCol="features")
+        df_features=assembler.transform(df)
+        ml_supervisionado=ML_supervisionado()
+        ml_supervisionado.treino(df_features)
+      
+        df_final.write.jdbc(
+            url=URL_SUPABASE,
+            table="public.classificacao_supervisionada_resultado",
+            mode="overwrite",
+            properties=PROPRIEDADES
+        )
     except Exception as e:
         print(f"Erro ao executar o processo de classificação supervisionada: {e}")
         raise e

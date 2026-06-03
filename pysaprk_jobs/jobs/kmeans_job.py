@@ -8,24 +8,24 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
         
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
-            table="(SELECT MIN(id) as min_id, MAX(id) as max_id FROM public.dados_csv_silver) as limites",
+            table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
             properties=PROPRIEDADES
-        ).collect()[0]
+        ).first()
         
         v_min = limites["min_id"] 
         v_max = limites["max_id"] 
 
-        df=spark.read.jdbc(
+        df=spark.read.jdbc( 
         url=URL_SUPABASE,
         table="public.dados_csv_silver",
-        column="id",
+        column="id_referencia",
         lowerBound=v_min,
         upperBound=v_max,
         numPartitions=10,
         properties=PROPRIEDADES
-    )
+        ).dropna()
         janela=Window.partitionBy('city_id')
-        df = df.dropna()
+        
         df_padronizado=df.withColumn("temp_padronizado", F.when(F.stddev("temp").over(janela) == 0,0.0)\
             .otherwise((F.col("temp") - F.mean("temp").over(janela)) / F.stddev("temp").over(janela))) \
             .withColumn("humidity_padronizado", F.when(F.stddev("humidity").over(janela) == 0,0.0)\
@@ -45,6 +45,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
         kmeans.treino(df_features)
         df_final=kmeans.resultado.select(
             'id',
+            "id_referencia",
             "anomaly_name",
             "mes_sin",
             "mes_cos",
@@ -57,8 +58,8 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
                  .otherwise("Alto")
                 ).drop("prediction")
 
-        df_final.coalesce(1).write.jdbc(
-            url=URL_SUPABASE,
+        df_final.write.jdbc(
+            url=URL_SUPABASE,   
             table="public.kmeans_resultado",
             mode="overwrite",
             properties=PROPRIEDADES
