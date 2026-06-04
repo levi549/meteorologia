@@ -47,7 +47,7 @@ class ML_RandomForest(ML):
         maxBins=10)
 
 
-        
+
 class ML_nivel_de_alerta(ML_RandomForest):
     def __init__(self):
         super().__init__(predictionCol="prediction_alerta", labelCol="Nivel_de_alerta")
