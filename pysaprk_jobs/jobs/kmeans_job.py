@@ -17,7 +17,16 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
 
         df=spark.read.jdbc( 
         url=URL_SUPABASE,
-        table="public.dados_csv_silver",
+        table=f""" (
+            SELECT * FROM public.dados_csv_silver
+            WHERE id_referencia > (
+                SELECT COALESCE(MAX(ultimo_id_processados), 0) 
+                FROM public.log_pipeline 
+                WHERE nome_pipeline = 'dbt_silver_job' 
+                AND status = 'SUCCESS'
+            )
+        ) as dados
+        """,
         column="id_referencia",
         lowerBound=v_min,
         upperBound=v_max,
@@ -43,7 +52,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
         df_features=assembler.transform(df_padronizado)
         kmeans=ML_kmeans()
         kmeans.treino(df_features)
-        df_final=kmeans.resultado.select(
+        df_final=kmeans.predict(df_features).select(
             'id',
             "id_referencia",
             "anomaly_name",
@@ -52,16 +61,12 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
             "temp",
             "humidity",
             "pressure",
-            "prediction").withColumn(
-                "Nivel_de_risco", F.when(F.col("prediction") == 0, "Baixo") \
-                 .when(F.col("prediction") == 1, "Médio") \
-                 .otherwise("Alto")
-                ).drop("prediction")
+            "prediction").withColumnRenamed("prediction","Nivel_de_alerta")
 
         df_final.write.jdbc(
             url=URL_SUPABASE,   
             table="public.kmeans_resultado",
-            mode="overwrite",
+            mode="append",
             properties=PROPRIEDADES
         )
         print("Processo de clustering KMeans concluído com sucesso.")

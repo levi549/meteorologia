@@ -14,7 +14,16 @@ def job_ml_supervisionado(URL_SUPABASE, PROPRIEDADES, spark):
 
         df=spark.read.jdbc(
         url=URL_SUPABASE,
-        table="public.kmeans_resultado",
+        table=f""" (
+            SELECT * FROM public.kmeans_resultado 
+            WHERE id_referencia > (
+                SELECT COALESCE(MAX(ultimo_id_processados), 0) 
+                FROM public.log_pipeline 
+                WHERE nome_pipeline = 'kmeans_job' 
+                AND status = 'SUCCESS'
+            )
+        ) as dados
+        """,
         column="id_referencia",
         lowerBound=v_min,
         upperBound=v_max,
@@ -22,12 +31,12 @@ def job_ml_supervisionado(URL_SUPABASE, PROPRIEDADES, spark):
         properties=PROPRIEDADES
     ).dropna()
         assembler=VectorAssembler(inputCols=[
-            "mes_sin",
+            "mes_sin", 
             "mes_cos",
             "temp",
             "humidity",
             "pressure",
-            "Nivel_de_risco"
+            "Nivel_de_alerta"
         ], outputCol="features")
         df_features=assembler.transform(df)
         ml_supervisionado=ML_supervisionado()

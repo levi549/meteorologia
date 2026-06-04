@@ -4,16 +4,19 @@ from supabase import create_client,Client
 import os
 import requests
 import csv
+from abc import ABC, abstractmethod
 
 
-class Datasource:
+class Datasource(ABC):
     def __init__(self):
         self.BD_conection: Client= create_client(
             os.getenv("SUPABASE_URL"),
             os.getenv("SUPABASE_KEY"))
 
+    @abstractmethod
     def Extract(self):
         pass
+    @abstractmethod
     def Load(self):
         pass
 
@@ -110,7 +113,7 @@ class IBGE_API(Datasource):
             if not cidades.data or len(cidades.data) == 0:
                 raise ValueError("Erro ao extrair info do BD")
             lista_cidades=[cidade['nome']  for cidade in cidades.data]
-            response=requests.get(os.getenv("IBGE_API"))
+            response=requests.get(self.api_ibge)
             if response.status_code != 200:
                 raise ValueError("erro ao buscar id das cidades")
             response=response.json()
