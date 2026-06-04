@@ -13,8 +13,6 @@ class ML(ABC):
     def predict(self, data):
       pass
 
-
-
 class ML_kmeans(ML):
     def __init__(self):
         super().__init__()
@@ -33,7 +31,6 @@ class ML_kmeans(ML):
             print(f"Ocorreu um erro durante a previsão com o modelo KMeans: {e}")
             raise e
 
-
 class ML_RandomForest(ML):
     def __init__(self, predictionCol, labelCol):
         super().__init__()
@@ -45,8 +42,6 @@ class ML_RandomForest(ML):
         seed=0,
         maxDepth=5,
         maxBins=10)
-
-
 
 class ML_nivel_de_alerta(ML_RandomForest):
     def __init__(self):
