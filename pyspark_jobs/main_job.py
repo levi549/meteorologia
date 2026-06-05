@@ -19,7 +19,7 @@ def main(id):
 
     try:
         job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,True,id)
-        job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark,id)
+        job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark,True,id)
     except Exception as e:
             print(f"Erro ao executar o processo de clustering KMeans: {e}")
             raise e

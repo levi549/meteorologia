@@ -1,9 +1,12 @@
 from pyspark.sql import functions as F
-def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark):
-    try:
+from src.logs import log
+from src.ML import ML_nivel_de_alerta
+def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=None,id=None):
+    gerenciador=log()
+    with gerenciador.log_job("ml_nivel_de_alerta",id) as logger:
         print("Iniciando o processo de classificação supervisionada")
-   
-        limites = spark.read.jdbc(
+        if not read_parquet:
+             limites = spark.read.jdbc(
             url=URL_SUPABASE,
             table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
             properties=PROPRIEDADES
@@ -21,7 +24,7 @@ def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark):
                 FROM public.log_pipeline 
                 WHERE nome_pipeline = 'kmeans_job' 
                 AND status = 'SUCCESS'
-            )
+            ) AND id_referencia <= {v_max}
         ) as dados
         """,
         column="id_referencia",
@@ -30,6 +33,9 @@ def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark):
         numPartitions=10,
         properties=PROPRIEDADES
     ).dropna()
+        caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        caminho_parquet = os.path.join(caminho_atual, "parquet")
+        df=spark.read.parquet(caminho_parquet)
         assembler=VectorAssembler(inputCols=[
             "mes_sin", 
             "mes_cos",
@@ -48,6 +54,3 @@ def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark):
             mode="overwrite",
             properties=PROPRIEDADES
         )
-    except Exception as e:
-        print(f"Erro ao executar o processo de classificação supervisionada: {e}")
-        raise e
