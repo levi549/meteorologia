@@ -1,5 +1,5 @@
 from pyspark.sql import functions as F
-def job_ml_supervisionado(URL_SUPABASE, PROPRIEDADES, spark):
+def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark):
     try:
         print("Iniciando o processo de classificação supervisionada")
    

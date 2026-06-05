@@ -2,16 +2,22 @@ from src.ML import ML_kmeans
 from pyspark.sql import functions as F
 from pyspark.ml.feature import  VectorAssembler
 from pyspark.sql.window import Window
-def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
-    try:
+import os
+from src.logs import log
+def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
+    gerenciador=log()
+    with gerenciador.log_job("kmeans_job",id) as logger:
         print("Iniciando o processo de clustering KMeans")
-        
+
+        caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        caminho_parquet = os.path.join(caminho_atual, "parquet")
+
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
             table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
             properties=PROPRIEDADES
         ).first()
-        
+            
         v_min = limites["min_id"] 
         v_max = limites["max_id"] 
 
@@ -21,10 +27,11 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
             SELECT * FROM public.dados_csv_silver
             WHERE id_referencia > (
                 SELECT COALESCE(MAX(ultimo_id_processados), 0) 
-                FROM public.log_pipeline 
-                WHERE nome_pipeline = 'dbt_silver_job' 
+                FROM public.log_job
+                WHERE nome_job = 'kmeans_job' 
                 AND status = 'SUCCESS'
             )
+            AND id_referencia <= {v_max}
         ) as dados
         """,
         column="id_referencia",
@@ -34,14 +41,14 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
         properties=PROPRIEDADES
         ).dropna()
         janela=Window.partitionBy('city_id')
-        
+            
         df_padronizado=df.withColumn("temp_padronizado", F.when(F.stddev("temp").over(janela) == 0,0.0)\
             .otherwise((F.col("temp") - F.mean("temp").over(janela)) / F.stddev("temp").over(janela))) \
             .withColumn("humidity_padronizado", F.when(F.stddev("humidity").over(janela) == 0,0.0)\
             .otherwise((F.col("humidity") - F.mean("humidity").over(janela)) / F.stddev("humidity").over(janela))) \
             .withColumn("pressure_padronizado", F.when(F.stddev("pressure").over(janela) == 0,0.0)\
             .otherwise((F.col("pressure") - F.mean("pressure").over(janela)) / F.stddev("pressure").over(janela)))
-        
+            
         assembler=VectorAssembler(inputCols=[
             "mes_sin",
             "mes_cos",
@@ -69,8 +76,10 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark):
             mode="append",
             properties=PROPRIEDADES
         )
-        print("Processo de clustering KMeans concluído com sucesso.")
-
-    except Exception as e:
-        print(f"Erro ao executar o processo de clustering KMeans: {e}")
-        raise e
+        logger.ultimo_id_processados=v_max
+        if write_parfquet:
+            df_final.write\
+            .mode("overwrite")\
+            .parquet(caminho_parquet)
+            print(f"Dados do clustering KMeans gravados no formato Parquet em: {caminho_parquet}")
+        print("Processo de clustering KMeans concluído com sucesso.")  
