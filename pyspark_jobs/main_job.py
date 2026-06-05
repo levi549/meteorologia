@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 import os
 from pyspark_jobs.jobs.kmeans_job import job_kmeans
-from pyspark_jobs.jobs.ml_supervisionado_job import job_ml_supervisionado
+from pyspark_jobs.jobs.job_ml_nivel_de_alerta import job_ml_nivel_de_alerta
 
 def main(id):
     spark = SparkSession.builder \

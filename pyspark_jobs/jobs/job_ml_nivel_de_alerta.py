@@ -6,36 +6,37 @@ def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=None,i
     with gerenciador.log_job("ml_nivel_de_alerta",id) as logger:
         print("Iniciando o processo de classificação supervisionada")
         if not read_parquet:
-             limites = spark.read.jdbc(
-            url=URL_SUPABASE,
-            table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
-            properties=PROPRIEDADES
-        ).first()
+            limites = spark.read.jdbc(
+                url=URL_SUPABASE,
+                table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
+                properties=PROPRIEDADES
+            ).first()
         
-        v_min = limites["min_id"] 
-        v_max = limites["max_id"] 
+            v_min = limites["min_id"] 
+            v_max = limites["max_id"] 
 
-        df=spark.read.jdbc(
-        url=URL_SUPABASE,
-        table=f""" (
-            SELECT * FROM public.kmeans_resultado 
-            WHERE id_referencia > (
-                SELECT COALESCE(MAX(ultimo_id_processados), 0) 
-                FROM public.log_pipeline 
-                WHERE nome_pipeline = 'kmeans_job' 
-                AND status = 'SUCCESS'
-            ) AND id_referencia <= {v_max}
-        ) as dados
-        """,
-        column="id_referencia",
-        lowerBound=v_min,
-        upperBound=v_max,
-        numPartitions=10,
-        properties=PROPRIEDADES
-    ).dropna()
-        caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        caminho_parquet = os.path.join(caminho_atual, "parquet")
-        df=spark.read.parquet(caminho_parquet)
+            df=spark.read.jdbc(
+            url=URL_SUPABASE,
+            table=f""" (
+                SELECT * FROM public.kmeans_resultado 
+                WHERE id_referencia > (
+                    SELECT COALESCE(MAX(ultimo_id_processados), 0) 
+                    FROM public.log_pipeline 
+                    WHERE nome_pipeline = 'kmeans_job' 
+                    AND status = 'SUCCESS'
+                ) AND id_referencia <= {v_max}
+            ) as dados
+            """,
+            column="id_referencia",
+            lowerBound=v_min,
+            upperBound=v_max,
+            numPartitions=10,
+            properties=PROPRIEDADES
+            ).dropna()
+        else:
+            caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+            caminho_parquet = os.path.join(caminho_atual, "parquet")
+            df=spark.read.parquet(caminho_parquet).dropna()
         assembler=VectorAssembler(inputCols=[
             "mes_sin", 
             "mes_cos",
