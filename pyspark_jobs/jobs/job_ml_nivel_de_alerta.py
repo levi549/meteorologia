@@ -8,7 +8,12 @@ def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=None,i
         if not read_parquet:
             limites = spark.read.jdbc(
                 url=URL_SUPABASE,
-                table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
+                table=""""(SELECT (
+                SELECT COALESCE(MAX(ultimo_id_processados), 0) 
+                FROM public.log_job
+                WHERE nome_job = 'kmeans_job' 
+                AND status = 'SUCCESS'
+            ) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites""",
                 properties=PROPRIEDADES
             ).first()
         
@@ -18,15 +23,12 @@ def job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=None,i
             df=spark.read.jdbc(
             url=URL_SUPABASE,
             table=f""" (
-                SELECT * FROM public.kmeans_resultado 
-                WHERE id_referencia > (
-                    SELECT COALESCE(MAX(ultimo_id_processados), 0) 
-                    FROM public.log_pipeline 
-                    WHERE nome_pipeline = 'kmeans_job' 
-                    AND status = 'SUCCESS'
-                ) AND id_referencia <= {v_max}
-            ) as dados
-            """,
+            SELECT * FROM public.dados_csv_silver
+            WHERE id_referencia > {v_min}
+            )
+            AND id_referencia <= {v_max}
+        ) as dados
+        """,
             column="id_referencia",
             lowerBound=v_min,
             upperBound=v_max,

@@ -1,13 +1,23 @@
 version: 2
 
 models:
-  - name: teste
-    description: "Tabela final de meteorologia pronta para análise de BI."
+  - name: dados_csv_silver
+    description: "Tabela para o processamento do kmeans."
     columns:
       - name: id           
         description: "Chave primária do registro."
         tests:
           - unique         
           - not_null                     
-
-      
+      - name: id_referencia
+        description: "Identificador de referência para o processamento incremental."
+        tests:
+          - not_null
+          - unique
+  - name: dados_ibge_silver
+    description: "tabela para o calculo de impacto populacional."
+    columns:
+      - name: populacao
+        description: "População total da cidade."
+        tests:
+          - not_null

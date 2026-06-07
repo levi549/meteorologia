@@ -14,7 +14,12 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
 
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
-            table="(SELECT MIN(id_referencia) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites",
+            table="""(SELECT (
+                SELECT COALESCE(MAX(ultimo_id_processados), 0) 
+                FROM public.log_job
+                WHERE nome_job = 'kmeans_job' 
+                AND status = 'SUCCESS'
+            ) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites""",
             properties=PROPRIEDADES
         ).first()
             
@@ -25,12 +30,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
         url=URL_SUPABASE,
         table=f""" (
             SELECT * FROM public.dados_csv_silver
-            WHERE id_referencia > (
-                SELECT COALESCE(MAX(ultimo_id_processados), 0) 
-                FROM public.log_job
-                WHERE nome_job = 'kmeans_job' 
-                AND status = 'SUCCESS'
-            )
+            WHERE id_referencia > {v_min}  
             AND id_referencia <= {v_max}
         ) as dados
         """,
@@ -39,7 +39,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
         upperBound=v_max,
         numPartitions=10,
         properties=PROPRIEDADES
-        ).dropna()
+        )
         janela=Window.partitionBy('city_id')
             
         df_padronizado=df.withColumn("temp_padronizado", F.when(F.stddev("temp").over(janela) == 0,0.0)\

@@ -10,6 +10,4 @@ sources:
       - name: raw_ibge
         description: "Dados do ibge"
 
-      - name: kmeans_resultado
-        description: "Resultado do modelo KMeans aplicado aos dados de meteorologia."
        
