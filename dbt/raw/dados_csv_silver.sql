@@ -1,3 +1,9 @@
+{{ config(
+    materialized='incremental',
+    unique_key='id',
+   
+)}}
+
 with dados_raw_csv as (
     select city_id,city_name,dt,temp,humidity,pressure,weather_main,anomaly_name from {{source('fonte_supabase','raw_csv')}}
 ),
@@ -18,12 +24,12 @@ with dados_raw_csv as (
         PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY humidity) OVER(PARTITION BY city_id) AS humidity_mediana,
         PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY pressure) OVER(PARTITION BY city_id) AS pressure_mediana
     from dados_raw_csv
+    where dt is not null
 )
 
 
 SELECT 
     {{ dbt_utils.generate_surrogate_key(['city_id', 'dt']) }} AS id,
-    id_referencia BIGINT GENERATED ALWAYS AS IDENTITY ,
     city_name,
     mes_sin,
     mes_cos,

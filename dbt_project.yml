@@ -21,4 +21,4 @@ clean-targets:
 
 models:
   projeto_supabase:
-    materialized: table
+    +materialized: table
