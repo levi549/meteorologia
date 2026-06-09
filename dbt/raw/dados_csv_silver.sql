@@ -1,30 +1,47 @@
 {{ config(
     materialized='incremental',
     unique_key='id',
-   
-)}}
+    on_schema_change='fail',
+    incremental_strategy='merge'
+) }}
 
 with dados_raw_csv as (
     select city_id,city_name,dt,temp,humidity,pressure,weather_main,anomaly_name from {{source('fonte_supabase','raw_csv')}}
+    where dt is not null
+    {% if is_incremental() %}
+        and dt > (select max(dt) from {{ this }})
+    {% endif %}
+    
 ),
 
- dados_padronizados as (
-    select 
+
+medianas_cidade as (
+    select
         city_id,
-        city_name,
-        dt,
-        temp,
-        humidity,
-        pressure,
-        weather_main,
-        anomaly_name,
-        SIN(EXTRACT(MONTH FROM dt::DATE) * 2 * PI() / 12) AS mes_sin,
-        COS(EXTRACT(MONTH FROM dt::DATE) * 2 * PI() / 12) AS mes_cos,
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY temp) OVER(PARTITION BY city_id) AS temp_mediana,
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY humidity) OVER(PARTITION BY city_id) AS humidity_mediana,
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY pressure) OVER(PARTITION BY city_id) AS pressure_mediana
-    from dados_raw_csv
-    where dt is not null
+        percentile_cont(0.5) within group (order by temp) as temp_mediana,
+        percentile_cont(0.5) within group (order by humidity) as humidity_mediana,
+        percentile_cont(0.5) within group (order by pressure) as pressure_mediana
+    from {{ source('fonte_supabase', 'raw_csv') }}
+    group by city_id
+),
+ dados_padronizados as (
+    select  
+        r.city_id,
+        r.city_name,
+        r.dt,
+        r.temp,
+        r.humidity,
+        r.pressure,
+        r.weather_main,
+        r.anomaly_name,
+        sin(extract(month from r.dt::date) * 2 * pi() / 12) as mes_sin,
+        cos(extract(month from r.dt::date) * 2 * pi() / 12) as mes_cos,
+        m.temp_mediana,
+        m.humidity_mediana,
+        m.pressure_mediana
+    from dados_raw_csv r
+    left join medianas_cidade m on r.city_id = m.city_id
+    
 )
 
 
