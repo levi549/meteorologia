@@ -9,11 +9,6 @@ models:
         tests:
           - unique         
           - not_null                     
-      - name: id_referencia
-        description: "Identificador de referência para o processamento incremental."
-        tests:
-          - not_null
-          - unique
   - name: dados_ibge_silver
     description: "tabela para o calculo de impacto populacional."
     columns:
@@ -21,3 +16,24 @@ models:
         description: "População total da cidade."
         tests:
           - not_null
+
+  - name: gold_dados_kmeans 
+    description: "Tabela com os dados padronizados para o kmeans."
+    columns:
+      - name: id
+        description: "Chave primária do registro."
+        tests:
+          - unique
+          - not_null
+      - name: mes_sin
+        description: "Valor do seno do mês para capturar a sazonalidade."
+      - name: mes_cos
+        description: "Valor do cosseno do mês para capturar a sazonalidade."
+      - name: temp_padronizado
+        description: "Temperatura padronizada (z-score) para o kmeans."
+      - name: humidity_padronizado
+        description: "Umidade padronizada (z-score) para o kmeans."
+      - name: pressure_padronizada
+        description: "Pressão padronizada (z-score) para o kmeans."
+      - name: anomaly_name
+        description: "Nome da anomalia associada ao registro, se houver."

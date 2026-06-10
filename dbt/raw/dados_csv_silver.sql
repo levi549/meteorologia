@@ -28,14 +28,14 @@ medianas_cidade as (
     select  
         r.city_id,
         r.city_name,
-        r.dt,
+        to_timestamp(r.dt) as dt,
         r.temp,
         r.humidity,
         r.pressure,
         r.weather_main,
         r.anomaly_name,
-        sin(extract(month from r.dt::date) * 2 * pi() / 12) as mes_sin,
-        cos(extract(month from r.dt::date) * 2 * pi() / 12) as mes_cos,
+        sin(extract(month from to_timestamp(r.dt)) * 2 * pi() / 12) as mes_sin,
+        cos(extract(month from to_timestamp(r.dt)) * 2 * pi() / 12) as mes_cos,
         m.temp_mediana,
         m.humidity_mediana,
         m.pressure_mediana
