@@ -1,6 +1,13 @@
-with json_ibge as(
-    select dados_json_ibge from {{source('fonte_supabase','raw_ibge')}}
+WITH dados AS (
+    SELECT dados_json_ibge FROM raw_ibge
+),
+dados_filtrados AS (
+    SELECT 
+        jsonb_path_query(dados_json_ibge, '$[*].resultados[*].series[*]') AS retorno
+    FROM dados
 )
-select 
-(dados_json_ibge -> 0 -> 'resultados' -> 0 -> 'series' -> 0 -> 'serie' ->> '2021')::INTEGER AS populacao
-from json_ibge
+SELECT 
+    (retorno->'localidade'->>'nome') AS nome,          
+    trim(both '"' from ano.value::text)::int AS populacao
+FROM dados_filtrados,
+LATERAL jsonb_each(retorno->'serie') AS ano;
