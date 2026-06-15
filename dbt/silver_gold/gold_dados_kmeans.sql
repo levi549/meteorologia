@@ -5,20 +5,29 @@
     incremental_strategy='merge'
 ) }}
 
-with dados_csv_silver as(
+with 
+
+
+{% if is_incremental() %}
+max_incremental as (
+    select coalesce(max(dt), '1970-01-01'::timestamp) as max_dt 
+    from {{ this }}
+),
+{% endif %}
+dados_csv_silver as (
     select
         id,
         city_name,
+        dt, 
         mes_sin,
         mes_cos,
         temp,
         humidity,
         pressure,
         anomaly_name
-        from {{ref('dados_csv_silver')}}
+    from {{ ref('dados_csv_silver') }}
     {% if is_incremental() %}
-     --arrumar perfomace
-      where id not in (select id from {{ this }})
+        where dt > (select max_dt from max_incremental)
     {% endif %}
 ),
 
@@ -38,6 +47,7 @@ estatisticas_cidade as (
 dados_padronizados as (
     select 
     d.id,
+    d.dt,
     d.mes_sin,
     d.mes_cos,
     case 
@@ -60,6 +70,7 @@ dados_padronizados as (
 
 select
     id,
+    dt,
     mes_sin,
     mes_cos,
     temp_padronizado,
