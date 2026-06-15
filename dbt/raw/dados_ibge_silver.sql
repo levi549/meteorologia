@@ -1,5 +1,5 @@
 WITH dados AS (
-    SELECT dados_json_ibge FROM raw_ibge
+    SELECT dados_json_ibge FROM {{ source('fonte_supabase', 'raw_ibge') }}
 ),
 dados_filtrados AS (
     SELECT 
@@ -8,6 +8,7 @@ dados_filtrados AS (
 )
 SELECT 
     (retorno->'localidade'->>'nome') AS nome,          
-    trim(both '"' from ano.value::text)::int AS populacao
-FROM dados_filtrados,
-LATERAL jsonb_each(retorno->'serie') AS ano;
+    trim(both '"' from ano.value::text)::int AS populacao,
+    CURRENT_TIMESTAMP AS ingested_at 
+FROM dados_filtrados
+CROSS JOIN LATERAL jsonb_each(retorno->'serie') AS ano

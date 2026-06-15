@@ -17,6 +17,7 @@ with dados_csv_silver as(
         anomaly_name
         from {{ref('dados_csv_silver')}}
     {% if is_incremental() %}
+     --arrumar perfomace
       where id not in (select id from {{ this }})
     {% endif %}
 ),
@@ -64,5 +65,6 @@ select
     temp_padronizado,
     humidity_padronizado,
     pressure_padronizada,
-    anomaly_name
+    anomaly_name,
+    CURRENT_TIMESTAMP AS ingested_at
 from dados_padronizados

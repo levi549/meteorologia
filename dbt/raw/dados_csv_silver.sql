@@ -3,15 +3,32 @@
     unique_key='id',
     on_schema_change='fail',
     incremental_strategy='merge'
-) }}
+)}}
 
-with dados_raw_csv as (
-    select city_id,city_name,dt,temp,humidity,pressure,weather_main,anomaly_name from {{source('fonte_supabase','raw_csv')}}
+with 
+{% if is_incremental() %}
+max_incremental as (
+    select coalesce(max(dt), '1970-01-01'::timestamp) as max_dt 
+    from {{ this }}
+),
+{% endif %}
+
+
+dados_raw_csv as (
+    select 
+        city_id,
+        city_name,
+        dt,
+        temp,
+        humidity,
+        pressure,
+        weather_main,
+        anomaly_name 
+    from {{ source('fonte_supabase', 'raw_csv') }}
     where dt is not null
     {% if is_incremental() %}
-        and dt > (select max(dt) from {{ this }})
+        and to_timestamp(dt) > (select max_dt from max_incremental)
     {% endif %}
-    
 ),
 
 
@@ -48,11 +65,13 @@ medianas_cidade as (
 SELECT 
     {{ dbt_utils.generate_surrogate_key(['city_id', 'dt']) }} AS id,
     city_name,
+    dt,
     mes_sin,
     mes_cos,
     COALESCE(temp, temp_mediana) AS temp,
     COALESCE(humidity, humidity_mediana) AS humidity,
     COALESCE(pressure, pressure_mediana) AS pressure,
     weather_main,
-    anomaly_name
+    anomaly_name,
+    CURRENT_TIMESTAMP AS ingested_at
 FROM dados_padronizados
