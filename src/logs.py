@@ -17,7 +17,8 @@ class log:
             "data_inicio": data_inicio,
             "status": "RUNNING"
         }).execute()
-        
+        if not response.data:
+            raise ValueError("Erro ao criar log do job no BD")
         id_log = response.data[0]['id']
         
         try:

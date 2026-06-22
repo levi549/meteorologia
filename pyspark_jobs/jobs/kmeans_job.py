@@ -15,59 +15,51 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
             table="""(SELECT (
-                SELECT COALESCE(MAX(ultimo_id_processados), 0) 
+                SELECT COALESCE(MAX(ultima_dt_processada), 0) 
                 FROM public.log_job
                 WHERE nome_job = 'kmeans_job' 
                 AND status = 'SUCCESS'
-            ) as min_id, MAX(id_referencia) as max_id FROM public.dados_csv_silver) as limites""",
+            ) as min_dt, MAX(ingested_at) as max_dt FROM public.dados_gold_kmeans) as limites""",
             properties=PROPRIEDADES
         ).first()
             
-        v_min = limites["min_id"] 
-        v_max = limites["max_id"] 
+        v_min = limites["min_dt"] 
+        v_max = limites["max_dt"] 
 
         df=spark.read.jdbc( 
         url=URL_SUPABASE,
         table=f""" (
-            SELECT * FROM public.dados_csv_silver
-            WHERE id_referencia > {v_min}  
-            AND id_referencia <= {v_max}
+            SELECT * FROM public.dados_gold_kmeans
+            WHERE ingested_at >= '{v_min}' 
+            AND ingested_at <= '{v_max}'
         ) as dados
         """,
-        column="id_referencia",
-        lowerBound=v_min,
-        upperBound=v_max,
+        column="ingested_at",
+        lowerBound=str(v_min),
+        upperBound=str(v_max),
         numPartitions=10,
         properties=PROPRIEDADES
         )
-        janela=Window.partitionBy('city_id')
-            
-        df_padronizado=df.withColumn("temp_padronizado", F.when(F.stddev("temp").over(janela) == 0,0.0)\
-            .otherwise((F.col("temp") - F.mean("temp").over(janela)) / F.stddev("temp").over(janela))) \
-            .withColumn("humidity_padronizado", F.when(F.stddev("humidity").over(janela) == 0,0.0)\
-            .otherwise((F.col("humidity") - F.mean("humidity").over(janela)) / F.stddev("humidity").over(janela))) \
-            .withColumn("pressure_padronizado", F.when(F.stddev("pressure").over(janela) == 0,0.0)\
-            .otherwise((F.col("pressure") - F.mean("pressure").over(janela)) / F.stddev("pressure").over(janela)))
             
         assembler=VectorAssembler(inputCols=[
             "mes_sin",
             "mes_cos",
             "temp_padronizado",
             "humidity_padronizado",
-            "pressure_padronizado"
+            "pressure_padronizada"
         ], outputCol="features")
-        df_features=assembler.transform(df_padronizado)
+        df_features=assembler.transform(df)
         kmeans=ML_kmeans()
         kmeans.treino(df_features)
         df_final=kmeans.predict(df_features).select(
             'id',
-            "id_referencia",
-            "anomaly_name",
+            "dt",
+            "anomaly_name" ,
             "mes_sin",
             "mes_cos",
-            "temp",
-            "humidity",
-            "pressure",
+            F.col("temp_padronizado").alias("temp"),
+            F.col("humidity_padronizado").alias("humidity"),
+            F.col("pressure_padronizada").alias("pressure"),
             "prediction").withColumnRenamed("prediction","Nivel_de_alerta")
 
         df_final.write.jdbc(
