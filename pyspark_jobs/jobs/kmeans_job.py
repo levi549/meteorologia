@@ -11,7 +11,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
 
         caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         caminho_parquet = os.path.join(caminho_atual, "parquet")
-
+        caminho_modelo = os.path.join(caminho_atual, "modelos", "kmeans_model")
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
             table="""(SELECT (
@@ -50,7 +50,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
         ], outputCol="features")
         df_features=assembler.transform(df)
         kmeans=ML_kmeans()
-        kmeans.treino(df_features)
+        kmeans.load_model(caminho_modelo)
         df_final=kmeans.predict(df_features).select(
             'id',
             "dt",

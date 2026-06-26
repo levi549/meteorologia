@@ -1,5 +1,5 @@
-from pyspark.ml.clustering import KMeans
-from pyspark.ml.classification import RandomForestClassifier
+from pyspark.ml.clustering import KMeans,KMeansModel
+from pyspark.ml.classification import RandomForestClassifier,RandomForestClassificationModel
 from abc import ABC, abstractmethod
 
 class ML(ABC):
@@ -12,7 +12,12 @@ class ML(ABC):
     @abstractmethod
     def predict(self, data):
       pass
-
+    @abstractmethod
+    def save_model(self, path):
+       pass
+    @abstractmethod
+    def load_model(self, path):
+        pass
 class ML_kmeans(ML):
     def __init__(self):
         super().__init__()
@@ -30,7 +35,21 @@ class ML_kmeans(ML):
         except Exception as e:
             print(f"Ocorreu um erro durante a previsão com o modelo KMeans: {e}")
             raise e
-
+    def save_model(self, path):
+        try:
+            self.Modelo_treinado.write().overwrite().save(path)
+            print(f"Modelo KMeans salvo com sucesso em: {path}")
+        except Exception as e:
+            print(f"Ocorreu um erro ao salvar o modelo KMeans: {e}")
+            raise e
+    def load_model(self, path):
+        try:
+            self.Modelo_treinado=KMeansModel.load(path)
+            print(f"Modelo KMeans carregado com sucesso de: {path}")
+        except Exception as e:
+            print(f"Ocorreu um erro ao carregar o modelo KMeans: {e}")
+            raise e
+  
 class ML_RandomForest(ML):
     def __init__(self, predictionCol, labelCol):
         super().__init__()
@@ -63,6 +82,20 @@ class ML_nivel_de_alerta(ML_RandomForest):
         except Exception as e:
             print(f"Ocorreu um erro durante a previsão com o modelo de classificação supervisionada de nivel de alerta: {e}")
             raise e
+    def save_model(self, path):
+        try:
+            self.Modelo_treinado.write().overwrite().save(path)
+            print(f"Modelo de classificação supervisionada de nivel de alerta salvo com sucesso em: {path}")
+        except Exception as e:
+            print(f"Ocorreu um erro ao salvar o modelo de classificação supervisionada de nivel de alerta: {e}")
+            raise e
+    def load_model(self, path):
+        try:
+            self.Modelo_treinado=RandomForestClassificationModel.load(path)
+            print(f"Modelo de classificação supervisionada de nivel de alerta carregado com sucesso de: {path}")
+        except Exception as e:
+            print(f"Ocorreu um erro ao carregar o modelo de classificação supervisionada de nivel de alerta: {e}")
+            raise e
 
 class Ml_anomaly(ML_RandomForest):
     def __init__(self):
@@ -81,4 +114,19 @@ class Ml_anomaly(ML_RandomForest):
             return self.Modelo_treinado.transform(data)
         except Exception as e:
             print(f"Ocorreu um erro durante a previsão com o modelo de classificação de anomalias: {e}")
+            raise e
+
+    def save_model(self, path):
+        try:
+            self.Modelo_treinado.write().overwrite().save(path)
+            print(f"Modelo de classificação de anomalias salvo com sucesso em: {path}")
+        except Exception as e:
+            print(f"Ocorreu um erro ao salvar o modelo de classificação de anomalias: {e}")
+            raise e
+    def load_model(self, path):
+        try:
+            self.Modelo_treinado=RandomForestClassificationModel.load(path)
+            print(f"Modelo de classificação de anomalias carregado com sucesso de: {path}")
+        except Exception as e:
+            print(f"Ocorreu um erro ao carregar o modelo de classificação de anomalias: {e}")
             raise e

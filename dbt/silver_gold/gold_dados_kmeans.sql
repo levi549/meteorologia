@@ -10,7 +10,7 @@ with
 
 {% if is_incremental() %}
 max_incremental as (
-    select coalesce(max(dt), '1970-01-01'::timestamp) as max_dt 
+    select coalesce(max(ingested_at), '1970-01-01'::timestamp) as max_dt 
     from {{ this }}
 ),
 {% endif %}
@@ -27,7 +27,7 @@ dados_csv_silver as (
         anomaly_name
     from {{ ref('dados_csv_silver') }}
     {% if is_incremental() %}
-        where dt > (select max_dt from max_incremental)
+        where ingested_at > (select max_dt from max_incremental)
     {% endif %}
 ),
 

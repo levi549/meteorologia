@@ -8,7 +8,7 @@
 with 
 {% if is_incremental() %}
 max_incremental as (
-    select coalesce(max(dt), '1970-01-01'::timestamp) as max_dt 
+    select coalesce(max(ingested_at), '1970-01-01'::timestamp) as max_dt 
     from {{ this }}
 ),
 {% endif %}
@@ -25,9 +25,9 @@ dados_raw_csv as (
         weather_main,
         anomaly_name 
     from {{ source('fonte_supabase', 'raw_csv') }}
-    where dt is not null
+    where ingested_at is not null
     {% if is_incremental() %}
-        and to_timestamp(dt) > (select max_dt from max_incremental)
+        and ingested_at > (select max_dt from max_incremental)
     {% endif %}
 ),
 
