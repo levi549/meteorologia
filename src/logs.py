@@ -39,3 +39,36 @@ class log:
                 "error": str(e)
             }).eq("id", id_log).execute()
             raise e
+
+
+class log_pipeline:
+    def __init__(self):
+        self.BD_conection: Client = create_client(
+            os.getenv("SUPABASE_URL"),
+            os.getenv("SUPABASE_KEY")
+        )
+        self.id_pipeline=None
+    @contextmanager
+    def log_pipiline(self,nome):
+        data_inicio = datetime.now().isoformat()
+        response=self.BD_conection.table('log_pipeline').insert({
+            "nome_pipeline":nome,
+            "data_inicio":data_inicio,
+            "status":"RUNNING"
+        })
+        self.id_pipeline=response.data[0]['id']
+        try:
+            yield self
+
+            data_fim=datetime.now().isoformat()
+            self.BD_conection.table("log_pipeline").update({
+                "data_fim":data_fim,
+                "status":"SUCCESS"
+            }).eq("id",self.id_pipeline).execute()
+        except Exception as e:
+            data_fim=datetime.now().isoformat()
+            self.BD_conection.table("log_pipeline").update({
+                "data_fim":data_fim,
+                "status":"FAILD",
+                "error":str(e)
+            }).eq("id",self.id_pipeline).execute()

@@ -1,8 +1,8 @@
 from pyspark.sql import SparkSession
 import os
 from pyspark_jobs.jobs.kmeans_job import job_kmeans
-from pyspark_jobs.jobs.job_ml_nivel_de_alerta import job_ml_nivel_de_alerta
-
+from pyspark_jobs.jobs.job_ml_nivel_de_alerta_train import job_ml_nivel_de_alerta_train
+from pyspark_jobs.jobs.job_kmeans_train import job_kmeans_train
 def main(id):
     spark = SparkSession.builder \
         .appName("KMeans_Clustering") \
@@ -18,8 +18,9 @@ def main(id):
 
 
     try:
+        job_kmeans_train(URL_SUPABASE, PROPRIEDADES, spark,True,id)
         job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,True,id)
-        job_ml_nivel_de_alerta(URL_SUPABASE, PROPRIEDADES, spark,True,id)
+        job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,True,id)
     except Exception as e:
             print(f"Erro ao executar o processo de clustering KMeans: {e}")
             raise e
