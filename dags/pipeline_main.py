@@ -41,15 +41,12 @@ def main_pipeline():
         task_id='dbt_test_job',
         bash_command='dbt test ',
     )
-    @task(task_id="run_kmeans_train_job")
-    def run_kmeans_train_job(airflow_id):
-        kmeans_train_job(airflow_id)
     @task(task_id="main_job")
     def run_main_job(airflow_id):
         main_job(airflow_id)
 
 id_pipeline = '{{ run_id }}'
 
-log_pipeline_inicio(id_pipeline) >> ingestion_job >> dbt_job >> dbt_test_job >> run_kmeans_train_job(id_pipeline) >> run_main_job(id_pipeline)
+log_pipeline_inicio(id_pipeline) >> ingestion_job >> dbt_job >> dbt_test_job >> run_main_job(id_pipeline)
 
 pipeline_main_dag = main_pipeline()
