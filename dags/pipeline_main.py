@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from airflow.decorators import dag, task
 from airflow.providers.bash.operator import BashOperator
 from src.logs import log_pipeline
-
-
+from pyspark_jobs.main_job import main_job
+from  pysaprk_jobs.kmeans_train_job import kmeans_train_job
 default_args={
     'owner':'meteorologia',
     'retries': 2,
@@ -14,25 +14,42 @@ default_args={
     default_args=default_args,
     description='orquestração da pipeline principal de meteorologia',
     schedule_interval='@once',
-    start_date=datetime(2026,6,29),
+    start_date=datetime(2026,7,1),
     catchup=False,
+    on_failure_callback=log_pipeline.log_erro,
+    on_success_callback=log_pipeline.log_sucesso,
     tags=['meteorologia', 'pyspark', 'dbt', 'ml'],
 )
 
 def main_pipeline():
-    gerenciador=log()
-    with gerenciador.log_pipeline("main_pipeline") as logger:
-        print("começãndo pipeline")
-        ingestion_job= BashOperator(
-            task_id='ingestion_job',
-            bash_command='python3 main.py',
-        )
-        dbt_job= BashOperator(
-            task_id='dbt_job',
-            bash_command='dbt run ',
-        )
-        dbt_test_job= BashOperator(
-            task_id='dbt_test_job',
-            bash_command='dbt test ',
-        )
-        
+
+
+    @task(task_id="log_pipeline_inicio")
+    def log_pipeline_inicio(airflow_id):
+        logger = log_pipeline()
+        logger.log_inicio(nome_pipeline='pipeline_meteorologia_main', airflow_id=airflow_id)
+
+    ingestion_job= BashOperator(
+        task_id='ingestion_job',
+        bash_command='python3 main.py',
+    )
+    dbt_job= BashOperator(
+        task_id='dbt_job',
+        bash_command='dbt run ',
+    )
+    dbt_test_job= BashOperator(
+        task_id='dbt_test_job',
+        bash_command='dbt test ',
+    )
+    @task(task_id="run_kmeans_train_job")
+    def run_kmeans_train_job(airflow_id):
+        kmeans_train_job(airflow_id)
+    @task(task_id="main_job")
+    def run_main_job(airflow_id):
+        main_job(airflow_id)
+
+id_pipeline = '{{ run_id }}'
+
+log_pipeline_inicio(id_pipeline) >> ingestion_job >> dbt_job >> dbt_test_job >> run_kmeans_train_job(id_pipeline) >> run_main_job(id_pipeline)
+
+pipeline_main_dag = main_pipeline()

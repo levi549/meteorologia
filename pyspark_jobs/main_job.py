@@ -3,7 +3,7 @@ import os
 from pyspark_jobs.jobs.kmeans_job import job_kmeans
 from pyspark_jobs.jobs.job_ml_nivel_de_alerta_train import job_ml_nivel_de_alerta_train
 from pyspark_jobs.jobs.job_kmeans_train import job_kmeans_train
-def main(id):
+def main_job(id):
     spark = SparkSession.builder \
         .appName("KMeans_Clustering") \
         .config("spark.jars.packages", "org.postgresql:postgresql:42.7.2") \
