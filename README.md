@@ -747,7 +747,7 @@ airflow dags trigger pipeline_meteorologia_main
 
 ## 🐳 Arquitetura de Deployment & Containerização
 
-> 🚧 **Status**: não implementada ainda (recomendação)
+> 🚧 **Status**: Em desinvovimento 
 
 Estratégia: containerizar cada serviço (Airflow, PySpark, dbt, PostgreSQL) usando Docker e Docker Compose, isolando dependências e garantindo reprodutibilidade entre ambientes.
 
