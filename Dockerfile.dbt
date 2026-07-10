@@ -1,0 +1,20 @@
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    libpq-dev \
+    git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir dbt-postgres>=1.10.0
+
+COPY ./dbt /app/dbt
+COPY ./packages.yml /app/
+COPY ./package-lock.yml /app/
+COPY ./dbt_project.yml /app
+COPY ./profiles.yml /app
+CMD ["dbt", "debug"]

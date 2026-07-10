@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from datetime import datetime
+from supabase import create_client, Client
 class log:
     def __init__(self):
         self.BD_conection: Client = create_client(

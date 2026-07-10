@@ -1,9 +1,13 @@
 from datetime import datetime, timedelta
 from airflow.decorators import dag, task
-from airflow.providers.bash.operator import BashOperator
 from src.logs import log_pipeline
 from pyspark_jobs.main_job import main_job
 from  pysaprk_jobs.kmeans_train_job import kmeans_train_job
+import sys
+import os
+from airflow.providers.docker.operators.docker import DockerOperator
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 default_args={
     'owner':'meteorologia',
     'retries': 2,
@@ -31,7 +35,7 @@ def main_pipeline():
 
     ingestion_job= BashOperator(
         task_id='ingestion_job',
-        bash_command='python3 main.py',
+        bash_command=' uv run python main.py',
     )
     dbt_job= BashOperator(
         task_id='dbt_job',
@@ -50,3 +54,4 @@ id_pipeline = '{{ run_id }}'
 log_pipeline_inicio(id_pipeline) >> ingestion_job >> dbt_job >> dbt_test_job >> run_main_job(id_pipeline)
 
 pipeline_main_dag = main_pipeline()
+

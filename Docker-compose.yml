@@ -1,0 +1,63 @@
+services:
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow
+    ports:
+      - "8080:8080"
+    command: standalone 
+    environment:
+      - PYTHONPATH=/opt/airflow
+    env_file:
+      - .env
+    depends_on:
+      - dbt
+      - pyspark
+      - ingestion
+    networks:
+      - minha-rede
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+
+  dbt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbt
+    container_name: dbt
+    environment:
+      - DBT_PROFILES_DIR=/app 
+    env_file:
+      - .env
+    networks:
+      - minha-rede
+    volumes:
+      - ./dbt:/app/dbt
+
+  pyspark:
+    build:
+      context: .
+      dockerfile: Dockerfile.pyspark
+    container_name: pyspark_job
+    env_file:
+      - .env
+    networks:
+      - minha-rede
+    volumes:
+      - ./parquet:/app/parquet
+  ingestion:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestion
+    container_name: ingestion
+    env_file:
+      - .env
+    networks:
+      - minha-rede
+    volumes:
+      - ./src:/app
+
+networks:
+  minha-rede:
+    driver: bridge
