@@ -1,417 +1,928 @@
-<div align="center">
-
 # 🌩️ Climate Anomaly Intelligence Platform
 
-**Plataforma end-to-end para monitoramento, análise e previsão de anomalias climáticas**
+<div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![dbt](https://img.shields.io/badge/dbt-1.10+-FF694B?style=flat-square&logo=dbt&logoColor=white)](https://getdbt.com)
-[![PySpark](https://img.shields.io/badge/PySpark-4.1+-E25A1C?style=flat-square&logo=apachespark&logoColor=white)](https://spark.apache.org)
-[![Airflow](https://img.shields.io/badge/Airflow-Orchestration-017CEE?style=flat-square&logo=apacheairflow&logoColor=white)](https://airflow.apache.org)
-[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Apache Airflow](https://img.shields.io/badge/Airflow-3.2+-017CEE?style=for-the-badge&logo=apacheairflow&logoColor=white)
+![PySpark](https://img.shields.io/badge/PySpark-4.1+-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt-1.10+-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
+**Plataforma end-to-end para detecção, classificação e previsão de anomalias climáticas.**
+Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em uma pipeline de processamento distribuída, gerando predições de anomalias via Machine Learning supervisionado.
+
+[![Repo](https://img.shields.io/badge/GitHub-levi549%2Fmeteorologia-181717?style=flat-square&logo=github)](https://github.com/levi549/meteorologia)
+[![Issues](https://img.shields.io/badge/Issues-Report%20Bug-red?style=flat-square&logo=github)](https://github.com/levi549/meteorologia/issues)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](#)
 
 </div>
 
 ---
 
-## 📋 Índice
+## 📑 Sumário
 
-- [Visão Geral](#-visão-geral)
-- [Arquitetura do Sistema](#-arquitetura-do-sistema)
-- [Medallion Architecture](#-medallion-architecture-camadas-de-dados)
-- [Pipeline de Machine Learning](#-pipeline-de-machine-learning)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Tecnologias](#-tecnologias)
-- [Como Executar](#-como-executar)
-- [Capacidades Principais](#-capacidades-principais)
+| | | | |
+|---|---|---|---|
+| [🏗️ Arquitetura](#️-arquitetura-de-alto-nível) | [🧩 Padrões](#-padrões-arquiteturais) | [🗂️ Camadas](#-detalhamento-por-camada) | [🌬️ Airflow](#-orquestração-apache-airflow) |
+| [📁 Estrutura](#-estrutura-de-diretórios) | [🎯 Decisões Técnicas](#-padrões--decisões-técnicas) | [🔄 Fluxo de Dados](#-fluxo-completo-de-dados-fim-a-fim) | [▶️ Como Executar](#️-como-executar) |
+| [🐳 Deploy](#-arquitetura-de-deployment--containerização) | [🧱 Stack](#-stack--dependências) | [🛠️ Troubleshooting](#️-troubleshooting) | [📬 Contato](#-contato--suporte) |
 
 ---
 
-## 🌐 Visão Geral
+## 🛠️ Stack Tecnológica
 
-A **Climate Anomaly Intelligence Platform** é uma solução de dados ponta a ponta para detecção, classificação e previsão de anomalias climáticas. O projeto integra múltiplas fontes de dados meteorológicos, processa-os por uma pipeline ELT com **Arquitetura Medallion**, aplica modelos de **Machine Learning** para rotulação e previsão de alertas, e expõe tudo via uma interface conversacional com um **Agente de IA**.
+<div align="center">
 
-```
-Fontes de Dados → EL (Python/POO) → Supabase Raw → dbt Silver → PySpark KMeans
-     → Gold → dbt → ML Supervisionado → LLM Interface
+<table>
+<tr>
+<td align="center" width="120">
+<a href="https://www.python.org/" target="_blank">
+<img src="https://cdn.simpleicons.org/python/3776AB" width="48" height="48" alt="Python"/><br/>
+<b>Python</b><br/>
+<sub>3.12+</sub>
+</a>
+</td>
+<td align="center" width="120">
+<a href="https://airflow.apache.org/" target="_blank">
+<img src="https://cdn.simpleicons.org/apacheairflow/017CEE" width="48" height="48" alt="Apache Airflow"/><br/>
+<b>Airflow</b><br/>
+<sub>3.2+</sub>
+</a>
+</td>
+<td align="center" width="120">
+<a href="https://spark.apache.org/docs/latest/api/python/" target="_blank">
+<img src="https://cdn.simpleicons.org/apachespark/E25A1C" width="48" height="48" alt="PySpark"/><br/>
+<b>PySpark</b><br/>
+<sub>4.1+</sub>
+</a>
+</td>
+<td align="center" width="120">
+<a href="https://www.getdbt.com/" target="_blank">
+<img src="https://cdn.simpleicons.org/dbt/FF694B" width="48" height="48" alt="dbt"/><br/>
+<b>dbt</b><br/>
+<sub>1.10+</sub>
+</a>
+</td>
+<td align="center" width="120">
+<a href="https://supabase.com/" target="_blank">
+<img src="https://cdn.simpleicons.org/supabase/3ECF8E" width="48" height="48" alt="Supabase"/><br/>
+<b>Supabase</b><br/>
+<sub>PostgreSQL 15+</sub>
+</a>
+</td>
+<td align="center" width="120">
+<a href="https://www.docker.com/" target="_blank">
+<img src="https://cdn.simpleicons.org/docker/2496ED" width="48" height="48" alt="Docker"/><br/>
+<b>Docker</b><br/>
+<sub>Latest</sub>
+</a>
+</td>
+</tr>
+</table>
+
+</div>
+
+> 💡 Clique em qualquer ícone acima para acessar a documentação oficial da tecnologia.
+
+---
+
+## 🏗️ Arquitetura de Alto Nível
+
+A plataforma segue uma **Medallion Architecture** (Raw → Silver → Gold), onde cada camada aumenta progressivamente a qualidade e o valor analítico dos dados, orquestrada de ponta a ponta pelo Apache Airflow.
+
+```mermaid
+flowchart TB
+    subgraph EXT["🌐 Fontes Externas"]
+        direction LR
+        CSV["📊 CSV Histórico"]
+        API["🌍 OpenWeather API"]
+        IBGE["👥 IBGE + SIDRA"]
+    end
+
+    subgraph ORQ["🌬️ Airflow — dags/pipeline_main.py"]
+        direction LR
+        A1[log_inicio] --> A2[ingestion_job] --> A3[dbt_job] --> A4[dbt_test_job] --> A5[kmeans_train_job] --> A6[main_job] --> A7[log_sucesso]
+    end
+
+    subgraph MED["🥉🥈🥇 Medallion Architecture — Supabase PostgreSQL"]
+        direction LR
+        RAW["🥉 RAW\n(Extract & Load)\nPython POO"]
+        SIL["🥈 SILVER\n(dbt)\nLimpeza + Encoding"]
+        GOLD["🥇 GOLD\n(PySpark)\nZ-Score + KMeans"]
+        RAW --> SIL --> GOLD
+    end
+
+    subgraph ML["🧠 ML Layer — src/ML.py"]
+        RF["Random Forest\n100 árvores"]
+    end
+
+    subgraph SERVE["💬 Serving [Futuro]"]
+        LLM["LLM Chat\nInterface Conversacional"]
+    end
+
+    EXT --> ORQ
+    ORQ -.orquestra.-> MED
+    GOLD --> ML
+    ML --> SERVE
+
+    style EXT fill:#1e293b,stroke:#38bdf8,color:#fff
+    style ORQ fill:#0c4a6e,stroke:#017CEE,color:#fff
+    style RAW fill:#78350f,stroke:#f59e0b,color:#fff
+    style SIL fill:#374151,stroke:#9ca3af,color:#fff
+    style GOLD fill:#713f12,stroke:#eab308,color:#fff
+    style ML fill:#134e4a,stroke:#2dd4bf,color:#fff
+    style SERVE fill:#4c1d95,stroke:#a78bfa,color:#fff
 ```
 
 ---
 
-## 🏗️ Arquitetura do Sistema
+## 🧩 Padrões Arquiteturais
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ORQUESTRAÇÃO — Apache Airflow                       │
-└─────────────────────┬─────────────────────┬───────────────────┬────────────┘
-                      │                     │                   │
-          ┌───────────▼──────────┐          │          ┌────────▼──────────┐
-          │   CAMADA DE INGESTÃO │          │          │  CAMADA DE SAÍDA  │
-          │   (Extract & Load)   │          │          │   (Serving)       │
-          │                      │          │          │                   │
-          │  ┌────────────────┐  │          │          │  ┌─────────────┐  │
-          │  │  class_file.py │  │          │          │  │ LLM Chatbot │  │
-          │  │  (POO por fonte│  │          │          │  │  + Agente   │  │
-          │  │   de dados)    │  │          │          │  │    de IA    │  │
-          │  └───────┬────────┘  │          │          │  └──────┬──────┘  │
-          │          │           │          │          │         │         │
-          │  Múltiplas fontes:   │          │          │  ┌──────▼──────┐  │
-          │  · APIs Meteo        │          │          │  │   ML Model  │  │
-          │  · OpenWeather API   │          │          │  │(Supervisio- │  │
-          │  · Dados históricos  │          │          │  │  nado)      │  │
-          └───────────┬──────────┘          │          │  └─────────────┘  │
-                      │                     │          └────────────────────┘
-                      ▼                     │
-          ┌───────────────────────┐         │
-          │     SUPABASE          │         │
-          │  (PostgreSQL managed) │         │
-          │  ┌─────────────────┐  │         │
-          │  │  Camada RAW     │◄─┘         │
-          │  │  (dados brutos) │            │
-          │  └────────┬────────┘            │
-          └───────────┼───────────────────┘ │
-                      │                     │
-    ┌─────────────────▼─────────────────────▼──────────────────────────────┐
-    │                   MEDALLION ARCHITECTURE — Processamento              │
-    │                                                                       │
-    │   RAW ──── dbt ────► SILVER ──── PySpark ────► GOLD ──── dbt ──────► │
-    │   (Supabase)         (Silver)    (KMeans)       (Gold)   (Final)      │
-    └───────────────────────────────────────────────────────────────────────┘
-```
+Cada decisão de design abaixo documenta o **o quê**, **onde** e **por quê**.
+
+<table>
+<tr><th width="30%">Padrão</th><th width="35%">O quê / Onde</th><th width="35%">Por quê</th></tr>
+<tr>
+<td>🥇 <b>Medallion Architecture</b></td>
+<td>Raw → Silver → Gold<br/><code>dbt/raw</code>, <code>dbt/silver_gold</code>, <code>pyspark_jobs</code></td>
+<td>Separação de responsabilidades, qualidade progressiva</td>
+</tr>
+<tr>
+<td>🧱 <b>Abstract Base Classes</b></td>
+<td><code>Datasource(ABC)</code> com <code>Extract()</code>, <code>Load()</code><br/><code>src/class_file.py</code></td>
+<td>Escalabilidade — adicionar fonte = 1 classe, sem quebrar código existente</td>
+</tr>
+<tr>
+<td>♻️ <b>Incremental Processing</b></td>
+<td><code>unique_key</code> + <code>incremental_strategy='merge'</code><br/>dbt models + <code>log_job</code></td>
+<td>Eficiência — reprocessar apenas dados novos desde a última execução</td>
+</tr>
+<tr>
+<td>📐 <b>Feature Engineering Distribuído</b></td>
+<td>Z-Score por variável no cluster Spark<br/><code>pyspark_jobs/jobs/kmeans_job.py</code></td>
+<td>Escalabilidade para datasets grandes</td>
+</tr>
+<tr>
+<td>🔄 <b>Encoding Cíclico Temporal</b></td>
+<td><code>mes_sin = SIN(2π·mês/12)</code>, <code>mes_cos = COS(2π·mês/12)</code><br/><code>dbt/raw/dados_csv_silver.sql</code></td>
+<td>Dezembro e janeiro são adjacentes climaticamente — ML aprende melhor</td>
+</tr>
+<tr>
+<td>🧵 <b>Context Manager de Logging</b></td>
+<td><code>with log_job(nome, id) as logger: ...</code><br/><code>src/logs.py</code></td>
+<td>Garante que o log sempre seja finalizado (sucesso ou erro)</td>
+</tr>
+</table>
 
 ---
 
-## 🥇 Medallion Architecture — Camadas de Dados
+## 🗂️ Detalhamento por Camada
 
-A pipeline segue a **Arquitetura Medallion** com três camadas progressivas de qualidade e transformação:
+### 🥉 4.1 Camada Raw (Bronze)
 
-### 🔴 Camada RAW (Bronze)
-> **Tecnologia:** Supabase (PostgreSQL) | **Responsável:** Python com POO
+**Responsabilidade**: armazenar dados exatamente como vêm da fonte — source of truth imutável.
 
-- Dados ingeridos diretamente das fontes externas sem transformação
-- Cada classe em `src/class_file.py` representa uma fonte de dados (Orientação a Objetos)
-- Dados chegam com estrutura original, incluindo nulos, duplicatas e inconsistências
-- Armazenados no **Supabase** via `supabase-py`
+**Localização**: Supabase PostgreSQL (3 tabelas)
+
+| Tabela | Fonte | Descrição |
+|--------|-------|-----------|
+| `raw_csv` | CSV histórico | Dados climáticos históricos por cidade |
+| `raw_wheather_api` | OpenWeather API | Respostas JSON brutas de tempo real |
+| `raw_ibge` | IBGE + SIDRA API | Dados populacionais por município |
+
+> Sem transformação — pode conter NULLs, duplicatas e estruturas heterogêneas.
+
+**Exemplo de código** (`src/class_file.py`):
 
 ```python
-# Exemplo do padrão POO para ingestão
-class WeatherSourceExtractor:
-    def extract(self) -> pd.DataFrame: ...
-    def load_to_raw(self) -> None: ...
+class CSV(Datasource):
+    def Extract(self):
+        # Lê CSV histórico de data/dados_Historic.csv
+        with open(self.path, 'r', encoding='utf-8') as file:
+            self.csv_file = list(csv.DictReader(file))
+
+    def Load(self):
+        # Carrega no Supabase com upsert (evita duplicatas)
+        self.BD_conection.table("raw_csv").upsert(
+            self.csv_file, on_conflict="city_id,dt"
+        ).execute()
 ```
 
 ---
 
-### 🥈 Camada SILVER
-> **Tecnologia:** dbt-postgres | **Localização:** `dbt/silver_gold/`
+### 🥈 4.2 Camada Silver (Transformation & Cleaning)
 
-Transformações aplicadas pelo **dbt** a partir da camada RAW. O objetivo desta camada é entregar dados limpos e com variáveis temporais devidamente codificadas para o job PySpark.
+**Responsabilidade**: limpeza, validação e encoding de features temporais.
+**Localização**: `dbt/raw/` → tabelas Silver no Supabase
 
-**1. Tratamento de Nulos — Imputação por Mediana**
+#### `dados_csv_silver.sql`
 
-Valores ausentes nas variáveis numéricas são substituídos pela **mediana** da coluna, estratégia robusta a outliers climáticos que preserva a distribuição sem distorcer os dados extremos:
-
-```sql
--- Exemplo de modelo dbt Silver
-SELECT
-    COALESCE(temperatura, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY temperatura)
-                          OVER ()) AS temperatura,
-    COALESCE(precipitacao, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY precipitacao)
-                           OVER ()) AS precipitacao,
-    COALESCE(umidade, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY umidade)
-                      OVER ()) AS umidade
-FROM {{ ref('raw_weather') }}
-```
-
-**2. Encoding Cíclico de Datas**
-
-Mês e outras variáveis temporais são transformados em componentes **seno e cosseno** para que o modelo capture a ciclicidade corretamente — dezembro e janeiro, por exemplo, ficam próximos no espaço vetorial:
+**Passo 1 — Imputação de Nulos (Mediana)**
+Robusta a outliers climáticos (extremos de temperatura), diferente da média (viesada) ou forward-fill (inaplicável aqui).
 
 ```sql
--- Encoding cíclico do mês no dbt
 SELECT
-    *,
-    SIN(2 * PI() * EXTRACT(MONTH FROM data) / 12) AS mes_sin,
-    COS(2 * PI() * EXTRACT(MONTH FROM data) / 12) AS mes_cos
-FROM imputado
+    COALESCE(temp, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY temp)) AS temp
+FROM raw_csv
+LEFT JOIN medianas_cidade ON raw_csv.city_id = medianas_cidade.city_id
 ```
 
-> **Por que seno/cosseno?** Uma feature `mês = 12` sem transformação está numericamente longe de `mês = 1`, mas climaticamente são meses adjacentes. O encoding cíclico corrige essa distorção para os modelos de ML.
+**Passo 2 — Encoding Cíclico de Datas**
 
-Esses dados limpos e com datas codificadas servem como input para o **job PySpark**.
+> **Problema**: mês 12 (dez) e mês 1 (jan) são adjacentes climaticamente, mas `|12 − 1| = 11` numericamente.
+> **Solução**: projetar o mês em componentes seno/cosseno, aproximando dezembro e janeiro no espaço vetorial.
+
+```sql
+SELECT
+    SIN(EXTRACT(MONTH FROM dt) * 2 * PI() / 12) AS mes_sin,
+    COS(EXTRACT(MONTH FROM dt) * 2 * PI() / 12) AS mes_cos
+FROM raw_csv
+```
+
+**Output**: tabela `dados_csv_silver`
+
+```
+id · city_name · city_id · dt · temp · humidity · pressure ·
+mes_sin · mes_cos · weather_main · anomaly_name · ingested_at
+```
+
+Incremental (`unique_key='id'`, `on_schema_change='fail'`) — reprocessa apenas registros com `ingested_at` mais recente.
+
+#### `dados_ibge_silver.sql`
+
+Parse de JSON complexo do IBGE via `jsonb_path_query` + `jsonb_each`:
+
+```sql
+SELECT
+    (retorno->'localidade'->>'nome') AS nome,
+    trim(both '"' from ano.value::text)::int AS populacao,
+    CURRENT_TIMESTAMP AS ingested_at
+FROM dados_filtrados
+CROSS JOIN LATERAL jsonb_each(retorno->'serie') AS ano
+```
 
 ---
 
-### 🥇 Camada GOLD
-> **Tecnologia:** PySpark 4.1 + dbt-postgres | **Localização:** `pysaprk_jobs/kmeans_job.py`
+### 🥇 4.3 Camada Gold (Clustering & Preparation for ML)
 
-O job PySpark é responsável por **três etapas em sequência**: feature engineering, clustering KMeans e preparação final do dataset para o treinamento supervisionado.
+**Responsabilidade**: feature engineering distribuído, clustering e preparação para treino supervisionado.
+**Localização**: `pyspark_jobs/jobs/kmeans_job.py` + `dbt/silver_gold/gold_dados_kmeans.sql`
 
-**Fluxo completo do job PySpark:**
+```mermaid
+flowchart LR
+    E["Entrada\ndados_csv_silver"] --> S1["1️⃣ Feature Engineering\nZ-Score distribuído"]
+    S1 --> S2["2️⃣ KMeans k=3\n🟢 Baixo · 🟡 Moderado · 🔴 Severo"]
+    S2 --> S3["3️⃣ Preparação ML\nrenomeia prediction → Nivel_de_alerta"]
+    S3 --> S4["4️⃣ Merge Incremental\ndbt → dados_gold_kmeans"]
 
-```
-Silver (dados limpos + mes_sin/cos)
-        │
-        ▼
-┌─────────────────────────┐
-│  1. Feature Engineering │
-│  · Z-Score por variável │
-│  · Normalização (MinMax │
-│    ou Standard Scaler)  │
-│  · Montagem do vetor    │
-│    de features p/ KMeans│
-└──────────┬──────────────┘
-           │
-           ▼
-┌─────────────────────────┐
-│  2. PySpark KMeans      │    ← Distribuído, escalável
-│     k = 3 clusters      │
-│  = 3 níveis de alerta   │
-└──────────┬──────────────┘
-           │
-           ▼
-┌─────────────────────────┐
-│  3. Prep. para ML       │
-│  · Une cluster label    │
-│    aos dados originais  │
-│  · Remove colunas       │
-│    intermediárias       │
-│  · Dataset final        │
-│    rotulado e pronto    │
-│    para treino superv.  │
-└──────────┬──────────────┘
-           │
-           ▼
-  Escrita na Camada GOLD
-  (Supabase via PySpark)
-           │
-           ▼
-  dbt finaliza
-  (agregações, views,
-   cálculo de impacto pop.)
+    style E fill:#374151,stroke:#9ca3af,color:#fff
+    style S1 fill:#78350f,stroke:#f59e0b,color:#fff
+    style S2 fill:#713f12,stroke:#eab308,color:#fff
+    style S3 fill:#134e4a,stroke:#2dd4bf,color:#fff
+    style S4 fill:#164e63,stroke:#22d3ee,color:#fff
 ```
 
-**Feature Engineering no job PySpark:**
+**Código PySpark** (`pyspark_jobs/jobs/kmeans_job.py`):
 
 ```python
-from pyspark.ml.feature import VectorAssembler, StandardScaler
-from pyspark.ml.clustering import KMeans
+# 1. Ler dados Silver com limites incrementais
+limites = spark.read.jdbc(...).first()
+v_min, v_max = limites["min_dt"], limites["max_dt"]
 
-# 1. Z-Score distribuído por variável
-for col in feature_cols:
-    mean_val = df.select(mean(col)).first()[0]
-    std_val  = df.select(stddev(col)).first()[0]
-    df = df.withColumn(f"{col}_zscore", (col(col) - mean_val) / std_val)
-
-# 2. Montagem do vetor de features
-assembler = VectorAssembler(
-    inputCols=[f"{c}_zscore" for c in feature_cols] + ["mes_sin", "mes_cos"],
-    outputCol="features"
+df = spark.read.jdbc(
+    url=URL_SUPABASE,
+    table=f"... WHERE ingested_at >= '{v_min}' AND ingested_at <= '{v_max}'",
+    numPartitions=10
 )
 
-# 3. KMeans k=3
-kmeans = KMeans(k=3, featuresCol="features", predictionCol="alert_cluster")
-model  = kmeans.fit(df_assembled)
-df_labeled = model.transform(df_assembled)
+# 2. Feature Engineering (Z-Score)
+for col in ['temp', 'humidity', 'pressure']:
+    mean_val = df.select(mean(col)).first()[0]
+    std_val = df.select(stddev(col)).first()[0]
+    df = df.withColumn(f"{col}_zscore", (col(col) - mean_val) / std_val)
 
-# 4. Preparo final para ML supervisionada
-df_final = (df_labeled
-    .drop("features", *[f"{c}_zscore" for c in feature_cols])
-    .withColumnRenamed("alert_cluster", "nivel_alerta"))
+# 3. VectorAssembler
+assembler = VectorAssembler(
+    inputCols=['mes_sin', 'mes_cos', 'temp_zscore', ...],
+    outputCol="features"
+)
+df_features = assembler.transform(df)
+
+# 4. KMeans
+kmeans = ML_kmeans()
+kmeans.load_model(caminho_modelo)
+df_labeled = kmeans.predict(df_features)
+
+# 5. Limpeza e renomeação
+df_final = df_labeled.drop("features").withColumnRenamed(
+    "prediction", "Nivel_de_alerta"
+)
+
+# 6. Escrever no Supabase
+df_final.write.jdbc(url=URL_SUPABASE, table="public.kmeans_resultado", mode="append")
 ```
 
-**Níveis de alerta gerados pelo KMeans:**
+**Modelo dbt Gold** (`dbt/silver_gold/gold_dados_kmeans.sql`):
 
-| Cluster | Nível | Descrição |
-|---|---|---|
-| 0 | 🟢 Baixo | Condições climáticas dentro do normal |
-| 1 | 🟡 Moderado | Desvios significativos identificados |
-| 2 | 🔴 Severo | Anomalia crítica com alto impacto potencial |
+```sql
+WITH estatisticas_cidade AS (
+    SELECT city_name,
+           avg(temp) AS temp_media,
+           stddev(temp) AS temp_desvio_padrao
+    FROM dados_csv_silver
+    GROUP BY city_name
+),
+dados_padronizados AS (
+    SELECT d.id, d.dt, d.mes_sin, d.mes_cos,
+           (d.temp - e.temp_media) / e.temp_desvio_padrao AS temp_padronizado
+    FROM dados_csv_silver d
+    LEFT JOIN estatisticas_cidade e USING (city_name)
+)
+SELECT *, CURRENT_TIMESTAMP AS ingested_at
+FROM dados_padronizados
+```
+
+**Output**: tabela `dados_gold_kmeans`
+
+```
+id · dt · mes_sin · mes_cos ·
+temp_padronizado · humidity_padronizado · pressure_padronizada ·
+anomaly_name · ingested_at
+```
 
 ---
 
-## 🤖 Pipeline de Machine Learning
+### 🧠 4.4 Camada ML (Machine Learning Supervisionado)
 
+**Responsabilidade**: treinar e prever com Random Forest em dados rotulados.
+**Localização**: `src/ML.py`
+
+```mermaid
+classDiagram
+    class ML {
+        <<abstract>>
+    }
+    class ML_kmeans {
+        +treino()
+        +predict()
+        +save_model()
+        +load_model()
+    }
+    class ML_RandomForest {
+        <<abstract>>
+    }
+    class ML_nivel_de_alerta {
+        Target: Nivel_de_alerta 0/1/2
+        Output: prediction_alerta
+    }
+    class Ml_anomaly {
+        Target: anomaly_name string
+        Output: prediction_anomaly
+    }
+
+    ML <|-- ML_kmeans
+    ML <|-- ML_RandomForest
+    ML_RandomForest <|-- ML_nivel_de_alerta
+    ML_RandomForest <|-- Ml_anomaly
 ```
-                     FASE 1: Rotulação (Não-supervisionado)
-                     ┌────────────────────────────────────┐
-                     │                                    │
-  Dados Silver  ───► │  PySpark KMeans (k=3)              │ ──► Dados Rotulados
-  (features       │  │  · Z-Score calculado               │     (Gold Layer)
-   engineered)    │  │  · Sazonalidade cíclica enc.       │
-                  │  │  · 3 clusters = 3 alert levels     │
-                  │  └────────────────────────────────────┘
-                  │
-                  │           FASE 2: Previsão (Supervisionado)
-                  │           ┌──────────────────────────────────────┐
-                  │           │                                      │
-                  └─────────► │  ML Supervisionado (src/ML.py)       │
-                              │  · Input: dados rotulados (Gold)     │
-                              │  · Target 1: tipo de alerta          │
-                              │  · Target 2: nome da anomalia        │
-                              │  · Inference: OpenWeather API (live) │
-                              └──────────────────┬───────────────────┘
-                                                 │
-                                                 ▼
-                                    ┌─────────────────────────┐
-                                    │   Interface LLM         │
-                                    │   · Chatbot conversac.  │
-                                    │   · Chama OpenWeather   │
-                                    │   · Chama ML model      │
-                                    │   · Responde em lng.    │
-                                    │     natural             │
-                                    └─────────────────────────┘
+
+**Modelo 1: `ML_nivel_de_alerta`**
+
+```python
+class ML_nivel_de_alerta(ML_RandomForest):
+    def __init__(self):
+        super().__init__(
+            predictionCol="prediction_alerta",
+            labelCol="Nivel_de_alerta"
+        )
+        self.Modelo = RandomForestClassifier(numTrees=100, maxDepth=5, maxBins=10, seed=0)
+
+    def treino(self, data):
+        self.Modelo_treinado = self.Modelo.fit(data)
 ```
 
-### Separação de responsabilidades: Silver × PySpark Job
-
-| Etapa | Onde ocorre | O que faz |
-|---|---|---|
-| Imputação de nulos | dbt Silver | Substitui `NULL` pela mediana da coluna |
-| Encoding cíclico | dbt Silver | Gera `mes_sin` e `mes_cos` a partir da data |
-| Z-Score | PySpark Job | Calcula desvio padrão distribuído por variável |
-| Normalização | PySpark Job | Padroniza escala para o KMeans convergir |
-| Clustering | PySpark Job | KMeans k=3 → rótulo `nivel_alerta` |
-| Dataset final | PySpark Job | Remove colunas intermediárias, monta treino supervisionado |
+| | |
+|---|---|
+| **Entrada** | `dados_gold_kmeans` rotulados pelo KMeans |
+| **Saída** | 🟢 0 (Baixo) · 🟡 1 (Moderado) · 🔴 2 (Severo) |
 
 ---
 
-## 📁 Estrutura do Projeto
+### 💬 4.5 Camada de Interface (LLM Chatbot)
+
+> 🚧 **Status**: não implementada ainda (planejada)
+
+```mermaid
+flowchart LR
+    U["👤 User Input\nlinguagem natural"] --> L["🤖 LLM\nextrai intenção"]
+    L --> O["🌍 OpenWeather API"]
+    L --> M["🧠 ML Model"]
+    O --> R["📝 Resposta\nconversacional"]
+    M --> R
+
+    style U fill:#1e293b,stroke:#38bdf8,color:#fff
+    style L fill:#4c1d95,stroke:#a78bfa,color:#fff
+    style R fill:#134e4a,stroke:#2dd4bf,color:#fff
+```
+
+---
+
+## 🌬️ Orquestração (Apache Airflow)
+
+**Arquivo**: `dags/pipeline_main.py` · **DAG**: `pipeline_meteorologia_main`
+
+| Parâmetro | Valor |
+|---|---|
+| `schedule_interval` | `@once` (executável manualmente) |
+| `start_date` | `2026-07-01` |
+| `catchup` | `False` |
+| `tags` | `meteorologia`, `pyspark`, `dbt`, `ml` |
+
+```mermaid
+flowchart TD
+    T1["📝 log_pipeline_inicio\nRegistra início no Supabase"] --> T2
+    T2["📥 ingestion_job\npython main.py"] --> T3
+    T3["🔧 dbt_job\ndbt run"] --> T4
+    T4["✅ dbt_test_job\ndbt test"] --> T5
+    T5["🧮 run_kmeans_train_job\nPySpark clustering"] --> T6
+    T6["🎯 run_main_job\nRandom Forest + LLM"] --> T7
+    T7["✔️ log_sucesso\nRegistra sucesso/erro"]
+
+    style T1 fill:#374151,stroke:#9ca3af,color:#fff
+    style T2 fill:#78350f,stroke:#f59e0b,color:#fff
+    style T3 fill:#7c2d12,stroke:#fb923c,color:#fff
+    style T4 fill:#14532d,stroke:#4ade80,color:#fff
+    style T5 fill:#713f12,stroke:#eab308,color:#fff
+    style T6 fill:#134e4a,stroke:#2dd4bf,color:#fff
+    style T7 fill:#164e63,stroke:#22d3ee,color:#fff
+```
+
+**Retry Policy**: 2 tentativas · delay de 10 minutos · callbacks `log_erro` (on_failure) e `log_sucesso` (on_success)
+
+**Logging Integrado** (`src/logs.py`): cada job registra `data_inicio`, `data_fim`, `status` (RUNNING/SUCCESS/FAILED), `error` via context manager try/yield/finally.
+
+```bash
+# Manual (Airflow Web UI ou CLI)
+airflow dags trigger pipeline_meteorologia_main
+```
+
+---
+
+## 📁 Estrutura de Diretórios
 
 ```
-climate-anomaly-platform/
+meteorologia/
+├── 📂 src/                          # Código-fonte principal
+│   ├── class_file.py                # POO: Datasource (ABC) + 3 implementações
+│   ├── ML.py                        # Hierarquia ML: 5 classes
+│   └── logs.py                      # Context manager logging
 │
-├── dags/                          # DAGs do Apache Airflow
-│   └── *.py                       # Pipelines orquestrados
+├── 📂 dbt/                          # Projeto dbt (transformações)
+│   ├── raw/                         # Modelos da camada SILVER
+│   │   ├── dados_csv_silver.sql
+│   │   └── dados_ibge_silver.sql
+│   ├── silver_gold/                 # Modelos da camada GOLD
+│   │   └── gold_dados_kmeans.sql
+│   └── dbt_project.yml
 │
-├── data/                          # Dados locais / fixtures
+├── 📂 pyspark_jobs/jobs/            # Jobs PySpark distribuídos
+│   ├── kmeans_job.py                # Feature engineering + KMeans + prep ML
+│   ├── kmeans_train_job.py          # [Inferência]
+│   └── main_job.py                  # [Futuro] Orquestração ML + LLM
 │
-├── dbt/                           # Projeto dbt
-│   ├── raw/                       # Modelos da camada RAW
-│   └── silver_gold/               # Modelos Silver e Gold
-│       └── *.sql                  # Transformações e agregações
+├── 📂 dags/
+│   └── pipeline_main.py             # DAG principal com 7 tasks
 │
-├── dbt_packages/                  # Dependências dbt
+├── 📂 data/
+│   └── data_Historic.csv            # Histórico climático (ingestão)
 │
-├── pysaprk_jobs/                  # Jobs PySpark distribuídos
-│   └── kmeans_job.py              # Clustering KMeans (k=3)
+├── 📂 logs/                         # Logs de execução
 │
-├── src/                           # Código-fonte principal
-│   ├── class_file.py              # Classes POO por fonte de dados (EL)
-│   └── ML.py                      # Modelos supervisionados
-│
-├── logs/                          # Logs de execução
-│   └── dbt.log
-│
-├── .env                           # Variáveis de ambiente
-├── dbt_project.yml                # Configuração dbt
-├── main.py                        # Entrypoint da aplicação
-├── pyproject.toml                 # Dependências do projeto
+├── .env                             # Variáveis de ambiente (não-versionado)
+├── dbt_project.yml
+├── main.py                          # Entry point
+├── pyproject.toml                   # Dependências (uv/pip)
 └── README.md
 ```
 
 ---
 
-## 🛠️ Tecnologias
+## 🎯 Padrões & Decisões Técnicas
 
-| Camada | Tecnologia | Versão | Função |
-|---|---|---|---|
-| Orquestração | Apache Airflow | Latest | Agendamento e controle da pipeline |
-| Armazenamento | Supabase (PostgreSQL) | `supabase>=2.30.0` | Data Warehouse gerenciado |
-| Transformação | dbt-postgres | `>=1.10.0` | ELT — camadas Silver e Gold |
-| Clustering | PySpark | `>=4.1.2` | KMeans distribuído (3 alertas) |
-| ML Supervisionado | scikit-learn / src/ML.py | — | Classificação de anomalias |
-| Ingestão | Python (POO) | 3.11+ | Extract & Load por fonte |
-| Config | python-dotenv | `>=1.2.2` | Gestão de variáveis de ambiente |
-| APIs externas | requests | `>=2.34.2` | OpenWeather + outras fontes |
-| Interface | LLM + Agente de IA | — | Chatbot em linguagem natural |
+<details open>
+<summary><b>7.1 · Por quê Supabase ao invés de outro Data Warehouse?</b></summary>
+<br/>
+
+| ✅ Supabase | ❌ Alternativas |
+|---|---|
+| PostgreSQL real, não proprietário | BigQuery — caro, vendor lock-in |
+| dbt nativo (`dbt-postgres`) | Snowflake — caro, não open-source |
+| APIs simples (`supabase-py`) | Data Lake (S3) — precisa de DMS extra |
+| Real-time subscriptions | |
+| Sem setup de infra (managed) | |
+
+</details>
+
+<details>
+<summary><b>7.2 · Por quê dbt para Silver se Python também pode fazer?</b></summary>
+<br/>
+
+| ✅ dbt | ❌ Python |
+|---|---|
+| SQL declarativo (menos código) | Código procedural (mais verboso) |
+| Versionamento (git) + CI/CD | Sem versionamento de transformações |
+| Tests nativos (`dbt test`) | Testes adicionais necessários |
+| Lineage automático | |
+| Reutilização de macros (DRY) | |
+
+</details>
+
+<details>
+<summary><b>7.3 · Por quê encoding cíclico de datas?</b></summary>
+<br/>
+
+Mês é cíclico (12 → 1 → 2 → ... → 12). Numericamente `|12−1| = 11` (distância alta), mas climaticamente janeiro segue dezembro.
+
+A projeção seno/cosseno transforma esse ciclo 1D em espaço 2D contínuo — dezembro e janeiro ficam próximos, e o ML aprende a sazonalidade corretamente.
+
+❌ Alternativa rejeitada: one-hot encoding (12 colunas binárias, peso desnecessário).
+
+</details>
+
+<details>
+<summary><b>7.4 · Por quê KMeans com k=3 especificamente?</b></summary>
+<br/>
+
+Necessidade de negócio: 3 níveis de alerta (🟢 Baixo · 🟡 Moderado · 🔴 Severo).
+
+| ✅ KMeans k=3 | ❌ Alternativas |
+|---|---|
+| Não-supervisionado | k=5 — muito granular |
+| Escalável (PySpark distribuído) | DBSCAN — sensível a hiperparâmetros |
+| Rápido, convergência para k pequeno | Supervisionado desde início — precisa labeled data upfront |
+| Rotulação automática | |
+
+</details>
+
+<details>
+<summary><b>7.5 · Por quê Random Forest para classificação supervisionada?</b></summary>
+<br/>
+
+| ✅ Random Forest | ❌ Alternativas |
+|---|---|
+| Robusto a outliers climáticos | Logistic Regression — assume linearidade |
+| Captura interações entre features | SVM — caro computacionalmente |
+| Importância de features automática | Neural Networks — overkill sem mais dados rotulados |
+| PySpark MLlib nativo | |
+| 100 árvores = balance accuracy/overfitting | |
+
+</details>
+
+<details>
+<summary><b>7.6 · Por quê Abstract Base Classes (ABC) para ingestão?</b></summary>
+<br/>
+
+Extensibilidade: adicionar nova fonte = 1 classe nova, herdando `Extract()` e `Load()` — Strategy Pattern sem quebrar código existente.
+
+```python
+class Datasource(ABC):
+    @abstractmethod
+    def Extract(self): pass
+    @abstractmethod
+    def Load(self): pass
+
+class API_custom(Datasource):
+    def Extract(self): ...
+    def Load(self): ...
+```
+
+</details>
 
 ---
 
-## 🚀 Como Executar
+## 🔄 Fluxo Completo de Dados (Fim-a-Fim)
 
-### Pré-requisitos
+```mermaid
+flowchart TB
+    subgraph F["🌐 FONTES EXTERNAS"]
+        direction LR
+        C["📊 CSV Histórico"]
+        A["🌍 OpenWeather API"]
+        I["👥 IBGE + SIDRA"]
+    end
 
-- Python 3.11+
-- Java 11+ (para PySpark)
-- Conta Supabase configurada
-- Chaves de API: OpenWeather e demais fontes
+    F -->|main.py| RAW
 
-### Instalação
+    subgraph RAW["🥉 RAW — Source of Truth imutável"]
+        direction LR
+        R1[raw_csv]
+        R2[raw_wheather_api]
+        R3[raw_ibge]
+    end
 
-```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/climate-anomaly-platform.git
-cd climate-anomaly-platform
+    RAW -->|dbt/raw/*.sql| SIL
 
-# Instale as dependências com uv
-uv sync
+    subgraph SIL["🥈 SILVER — Limpeza + Feature Engineering"]
+        direction LR
+        S1["Imputação\nmediana"]
+        S2["Encoding cíclico\nmes_sin/cos"]
+        S3["Merge stats\npor cidade"]
+    end
 
-# Configure as variáveis de ambiente
-cp .env.example .env
-# Edite o .env com suas credenciais
+    SIL -->|kmeans_job.py + dbt| GOLD
+
+    subgraph GOLD["🥇 GOLD — Clustering Distribuído"]
+        direction LR
+        G1["Z-Score\ndistribuído"]
+        G2["KMeans k=3\n🟢🟡🔴"]
+        G3["Merge\nincremental"]
+    end
+
+    GOLD -->|src/ML.py| MLAYER
+
+    subgraph MLAYER["🧠 ML — Supervisionado"]
+        direction LR
+        M1["ML_nivel_de_alerta\nRandom Forest"]
+        M2["Ml_anomaly\nRandom Forest"]
+    end
+
+    MLAYER -.futuro.-> SERVE["💬 LLM Chatbot\nInterface Conversacional"]
+
+    style F fill:#1e293b,stroke:#38bdf8,color:#fff
+    style RAW fill:#78350f,stroke:#f59e0b,color:#fff
+    style SIL fill:#374151,stroke:#9ca3af,color:#fff
+    style GOLD fill:#713f12,stroke:#eab308,color:#fff
+    style MLAYER fill:#134e4a,stroke:#2dd4bf,color:#fff
+    style SERVE fill:#4c1d95,stroke:#a78bfa,color:#fff
 ```
 
-### Configuração
+---
+
+## ▶️ Como Executar
+
+### 9.1 Pré-requisitos
 
 ```bash
-# Configure o projeto dbt
+# Sistema
+- Python 3.12+
+- Java 11+ (requerido por PySpark)
+- Git
+
+# Contas & Credenciais
+- Conta Supabase (https://supabase.com) configurada
+- API Key da OpenWeather (https://openweathermap.org/api)
+- Acesso às APIs IBGE e SIDRA (públicas, sem autenticação)
+```
+
+### 9.2 Instalação
+
+```bash
+# 1. Clonar repositório
+git clone https://github.com/levi549/meteorologia.git
+cd meteorologia
+
+# 2. Criar ambiente virtual
+python3.12 -m venv venv
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate   # Windows
+
+# 3. Instalar dependências com uv
+pip install uv
+uv sync
+
+# 4. Configurar variáveis de ambiente
+cp .env.example .env
+# Editar .env com suas credenciais
+```
+
+### 9.3 Configuração dbt
+
+```bash
 cd dbt
 dbt deps
-dbt debug
-
-# Volte à raiz
+dbt debug   # deve retornar "All checks passed!"
 cd ..
 ```
 
-### Executando a Pipeline
+### 9.4 Execução Manual (Por Etapa)
 
 ```bash
-# Execução manual completa
+# Etapa 1: Ingestão
 python main.py
 
-# Ou via Airflow (recomendado para produção)
-airflow dags trigger climate_pipeline_dag
+# Etapa 2: Transformação Silver
+cd dbt && dbt run --select raw
+
+# Etapa 3: Teste de qualidade
+dbt test
+
+# Etapa 4: Clustering PySpark
+spark-submit pyspark_jobs/jobs/kmeans_job.py
+
+# Etapa 5: Finalização Gold
+dbt run --select silver_gold
+
+# Etapa 6: Treino do Modelo ML
+python -c "from src.ML import ML_nivel_de_alerta; m = ML_nivel_de_alerta(); ..."
 ```
 
-### Execução por etapa
+### 9.5 Execução via Apache Airflow (Recomendado para Produção)
 
 ```bash
-# 1. Ingestão (Extract & Load)
-python src/class_file.py
+airflow db init
 
-# 2. Transformação Silver (dbt)
-cd dbt && dbt run --select silver_gold
+airflow users create \
+    --username admin --password admin \
+    --firstname Admin --lastname Admin \
+    --role Admin --email admin@airflow.com
 
-# 3. Clustering PySpark
-spark-submit pysaprk_jobs/kmeans_job.py
+airflow webserver --port 8080   # http://localhost:8080
+airflow scheduler                # em outro terminal
 
-# 4. Finalização Gold (dbt)
-cd dbt && dbt run --select gold_final
-
-# 5. Treinamento do modelo ML
-python src/ML.py --mode train
-
-# 6. Interface LLM
-python main.py --interface chat
+airflow dags trigger pipeline_meteorologia_main
 ```
 
 ---
 
-## ⚡ Capacidades Principais
+## 🐳 Arquitetura de Deployment & Containerização
 
-- **Ingestão multi-fonte automatizada** — classes Python independentes (POO) por fonte, orquestradas via Airflow
-- **Pipeline ELT estruturada** — Raw → Silver → Gold com dbt e PySpark
-- **Clustering ML distribuído** — KMeans com PySpark gerando 3 níveis de alerta (Baixo / Moderado / Severo)
-- **Feature engineering robusto** — Z-Score, encoding cíclico de sazonalidade (`mês_sin/cos`), tratamento de nulos
-- **Previsão supervisionada** — modelo treinado nos dados rotulados para prever tipo de alerta e nome da anomalia em tempo real
-- **Cálculo de impacto populacional** — estimativa matemática do número de pessoas afetadas por cada anomalia
-- **Interface conversacional** — LLM Chatbot com Agente de IA que chama a OpenWeather API + modelo ML para responder em linguagem natural
+> 🚧 **Status**: não implementada ainda (recomendação)
+
+Estratégia: containerizar cada serviço (Airflow, PySpark, dbt, PostgreSQL) usando Docker e Docker Compose, isolando dependências e garantindo reprodutibilidade entre ambientes.
+
+```mermaid
+flowchart TB
+    subgraph COMPOSE["🐳 docker-compose.yml"]
+        direction TB
+        PG["🐘 postgres\nmetastore Airflow"]
+        RD["🔴 redis\nCelery broker"]
+        WEB["🌐 airflow-webserver"]
+        SCH["⏱️ airflow-scheduler"]
+        WRK["⚙️ airflow-worker\n(escalável)"]
+
+        PG --> WEB
+        RD --> WEB
+        WEB --> SCH
+        SCH --> WRK
+    end
+
+    style PG fill:#164e63,stroke:#22d3ee,color:#fff
+    style RD fill:#7f1d1d,stroke:#f87171,color:#fff
+    style WEB fill:#017CEE,stroke:#38bdf8,color:#fff
+    style SCH fill:#0c4a6e,stroke:#38bdf8,color:#fff
+    style WRK fill:#374151,stroke:#9ca3af,color:#fff
+```
+
+**Componentes previstos**:
+- **Dockerfile**: baseado na imagem oficial do Airflow, com Java 11 (requisito PySpark) e dependências do projeto embutidas.
+- **docker-compose.yml**: orquestra `postgres`, `redis`, `airflow-webserver`, `airflow-scheduler` e `airflow-worker` (escalável via réplicas), compartilhando as variáveis do Supabase e das APIs externas via `.env`.
+
+### Como Usar
+
+```bash
+cp .env.example .env
+docker-compose build
+docker-compose up -d
+docker-compose ps          # verificar saúde
+# Web UI: http://localhost:8080 (admin:admin)
+docker-compose down
+```
+
+---
+
+## 🧱 Extensibilidade & Manutenção
+
+<details>
+<summary><b>➕ Como Adicionar Nova Fonte de Dados?</b></summary>
+
+```python
+class NovaFonte(Datasource):
+    def __init__(self):
+        super().__init__()
+        self.dados = []
+
+    def Extract(self):
+        self.dados = requests.get("https://api.nova-fonte.com/data").json()
+
+    def Load(self):
+        self.BD_conection.table("raw_nova_fonte").insert(self.dados).execute()
+```
+
+1. Criar a classe em `src/class_file.py`
+2. Usar em `main.py`
+3. Criar modelo dbt em `dbt/raw/nova_fonte_silver.sql`
+4. Trigger manual ou via Airflow DAG
+
+</details>
+
+<details>
+<summary><b>➕ Como Adicionar Novo Modelo ML?</b></summary>
+
+```python
+class Ml_nova_tarefa(ML_RandomForest):
+    def __init__(self):
+        super().__init__(predictionCol="prediction_nova", labelCol="target_nova")
+
+    def treino(self, data):
+        self.Modelo_treinado = self.Modelo.fit(data)
+
+    def predict(self, data):
+        return self.Modelo_treinado.transform(data)
+```
+
+Integrar em `dags/pipeline_main.py`, treinar e servir predições.
+
+</details>
+
+<details>
+<summary><b>🔧 Como Modificar Pipeline dbt?</b></summary>
+
+```bash
+dbt run --select nome_modelo
+dbt test --select nome_modelo
+dbt docs generate && dbt docs serve
+git add dbt/ && git commit -m "feat: update modelo XYZ"
+```
+
+</details>
+
+<details>
+<summary><b>📈 Como Escalar com Docker?</b></summary>
+
+```bash
+docker-compose up -d --scale airflow-worker=4
+```
+
+</details>
+
+---
+
+## 🧱 Stack & Dependências
+
+| Componente | Tecnologia | Versão | Função Arquitetural | Alternativas |
+|---|---|---|---|---|
+| Linguagem | [Python](https://www.python.org/) | 3.12+ | Implementação de lógica de negócio | Go, Scala |
+| Orquestração | [Apache Airflow](https://airflow.apache.org/) | 3.2+ | DAG-based orchestration, retry, logging | Kubernetes, Prefect |
+| Spark Integration | [airflow-providers-spark](https://airflow.apache.org/docs/apache-airflow-providers-apache-spark/) | 6.0+ | Executar jobs PySpark via Airflow | Kubernetes Operator |
+| Data Warehouse | [Supabase](https://supabase.com/) (PostgreSQL) | 15+ | Armazenamento centralizado (Raw/Silver/Gold) | BigQuery, Snowflake |
+| Transformação | [dbt-postgres](https://www.getdbt.com/) | 1.10+ | SQL declarativo para ELT | Spark SQL, Flink |
+| Proc. Distribuído | [PySpark](https://spark.apache.org/docs/latest/api/python/) | 4.1+ | Feature engineering + KMeans escalável | Polars |
+| Clustering | PySpark MLlib | 4.1+ | KMeans distribuído k=3 | scikit-learn, H2O |
+| Classificação | PySpark MLlib | 4.1+ | Random Forest supervisionado | XGBoost, LightGBM |
+| HTTP Client | [requests](https://requests.readthedocs.io/) | 2.34+ | Chamadas a APIs externas | httpx, aiohttp |
+| Config | [python-dotenv](https://pypi.org/project/python-dotenv/) | 1.2+ | Gestão de variáveis de ambiente | Pydantic, hydra |
+| Database Client | [supabase-py](https://github.com/supabase/supabase-py) | 2.30+ | Conexão com Supabase | psycopg2 |
+| Containerização | [Docker](https://www.docker.com/) | Latest | Isolamento + produção | Podman |
+
+---
+
+## 📌 Roadmap
+
+- [ ] Interface LLM Chatbot (`src/interface_llm.py`)
+- [ ] Cálculo de impacto populacional
+- [ ] API REST para servir modelos (FastAPI)
+- [ ] Dashboard Streamlit/Grafana
+- [ ] Testes unitários + CI/CD (GitHub Actions)
+- [ ] Documentação `dbt docs generate`
+- [ ] Containerização com Docker/docker-compose
+- [ ] Kubernetes manifests (Helm)
+
+### Como Contribuir
+
+```bash
+git checkout -b feat/nova-feature
+git commit -am 'Add nova feature'
+git push origin feat/nova-feature
+# Abra um Pull Request
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+| Problema | Causa | Solução |
+|---|---|---|
+| `ModuleNotFoundError: pyspark` | PySpark não instalado | `pip install pyspark>=4.1.2` |
+| `SUPABASE_URL not found` | `.env` não configurado | `cp .env.example .env` e edite |
+| `dbt run` — Connection error | Credenciais Supabase incorretas | Verifique `SUPABASE_URL`/`SUPABASE_KEY` |
+| `KMeans.fit()` lento | Dataset grande / k alto | Reduzir partições Spark ou usar sample |
+| DAG não aparece no Airflow | DAG fora do `AIRFLOW_HOME` | Verifique `dags_folder` em `airflow.cfg` |
+
+---
+
+## 📬 Contato & Suporte
+
+<div align="center">
+
+[![GitHub](https://img.shields.io/badge/@levi549-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/levi549)
+[![Repositório](https://img.shields.io/badge/meteorologia-repo-blue?style=for-the-badge&logo=github)](https://github.com/levi549/meteorologia)
+[![Issues](https://img.shields.io/badge/Issues-abrir%20chamado-red?style=for-the-badge&logo=github)](https://github.com/levi549/meteorologia/issues)
+
+</div>
 
 ---
 
 <div align="center">
-
-**Desenvolvido com foco em escalabilidade, reprodutibilidade e qualidade de dados.**
-
+<sub>Construído com 🌩️ por <a href="https://github.com/levi549">@levi549</a></sub>
 </div>

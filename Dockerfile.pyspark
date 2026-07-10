@@ -10,6 +10,7 @@ WORKDIR /app
 ENV PYTHONPATH="/app"
 
 
+
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir setuptools && \
     pip install --no-cache-dir numpy pyspark==3.5.0 supabase==2.30.0

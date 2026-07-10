@@ -20,6 +20,7 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
+      - /var/run/docker.sock:/var/run/docker.sock
 
   dbt:
     build:
@@ -60,4 +61,5 @@ services:
 
 networks:
   minha-rede:
+    name: minha-rede
     driver: bridge
