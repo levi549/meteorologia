@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from src.class_file import CSV, IBGE_API
+
 load_dotenv()
 
 def main():

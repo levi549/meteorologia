@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 
 USER airflow
-
+COPY ./src/logs.py /opt/airflow/logs.py
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir pyspark==3.5.0 supabase==2.30.0
+    pip install --no-cache-dir pyspark==3.5.0 supabase==2.30.0 python-dotenv==1.2.2 requests==2.34.2

@@ -1,9 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.logs import log
 from src.ML import ML_nivel_de_alerta
 from pyspark.sql import functions as F
 from pyspark.ml.feature import  VectorAssembler
 from pyspark.sql.window import Window
 import os
+from src.predicate import Predicate
 def job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=None,id=None):
     gerenciador=log()
     with gerenciador.log_job("ml_nivel_de_alerta_train",id) as logger:
@@ -14,26 +18,25 @@ def job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=
             caminho_parquet = os.path.join(caminho_atual, "parquet")
             limites = spark.read.jdbc(
                 url=URL_SUPABASE,
-                table="""(SELECT MIN(ingested_at) as min_id, MAX(ingested_at) as max_id FROM public.kmeans_resultado) as limites""",
+                table="""(SELECT 
+                MiN(ingested_at) as min_dt,
+                MAX(ingested_at) as max_dt,
+                MIN(dt) as min_dt2,
+                MAX(dt) as max_dt2
+                FROM public.kmeans_resultado) as limites""",
                 properties=PROPRIEDADES
             ).first()
 
-            v_min = limites["min_id"] 
-            v_max = limites["max_id"] 
-
+            v_min = limites["min_dt"] 
+            v_max = limites["max_dt"] 
+            v_min2 = limites["min_dt2"] 
+            v_max2 = limites["max_dt2"] 
+            predicates=Predicate(v_min, v_max, v_min2, v_max2,10).gerar_predicate()
             df=spark.read.jdbc(
             url=URL_SUPABASE,
-            table=f""" (
-                SELECT * FROM public.kmeans_resultado
-                WHERE ingested_at >= '{v_min}'
-                AND ingested_at <= '{v_max}'
-            ) as dados
-            """,
-            column="ingested_at",
-            lowerBound=str(v_min),
-            upperBound=str(v_max),
-            numPartitions=10,
-            properties=PROPRIEDADES
+            table="public.kmeans_resultado",
+            properties=PROPRIEDADES,
+            predicates=predicates
             ).dropna()
                 
             assembler=VectorAssembler(inputCols=[

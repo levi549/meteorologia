@@ -13,11 +13,10 @@ ENV PYTHONPATH="/app"
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir setuptools && \
-    pip install --no-cache-dir numpy pyspark==3.5.0 supabase==2.30.0
+    pip install --no-cache-dir numpy pyspark==3.5.0 supabase==2.30.0 python-dotenv==1.2.2
 
 
 COPY ./pyspark_jobs /app/pyspark_jobs
 COPY ./src /app/src
 
 
-CMD ["python", "pyspark_jobs/main_job.py"]

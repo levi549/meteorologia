@@ -1,13 +1,17 @@
 from contextlib import contextmanager
 from datetime import datetime
 from supabase import create_client, Client
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
 class log:
     def __init__(self):
         self.BD_conection: Client = create_client(
-            os.getenv("SUPABASE_URL"),
-            os.getenv("SUPABASE_KEY")
+            os.environ.get("SUPABASE_URL"),
+            os.environ.get("SUPABASE_KEY")
         )
-        self.ultimo_id_processados = 0 
+        self.ultima_dt_processada =None
     @contextmanager
     def log_job(self, nome_job, pipeline_id):
         data_inicio = datetime.now().isoformat()
@@ -29,7 +33,7 @@ class log:
             self.BD_conection.table("log_job").update({
                 "data_fim": data_fim,
                 "status": "SUCCESS",
-                "ultimo_id_processados": self.ultimo_id_processados
+                "ultima_dt_processada": str(self.ultima_dt_processada)
             }).eq("id", id_log).execute()
             
         except Exception as e:
@@ -37,12 +41,12 @@ class log:
             self.BD_conection.table("log_job").update({
                 "data_fim": data_fim,
                 "status": "FAILED",
-                "error": str(e)
+                "erro": str(e)
             }).eq("id", id_log).execute()
             raise e
 
 
-class Log_pipeline:
+class log_pipeline:
     def __init__(self):
         self.BD_conection: Client = create_client(
             os.getenv("SUPABASE_URL"),
@@ -75,5 +79,5 @@ class Log_pipeline:
         self.BD_conection.table("log_pipeline").update({
             "data_fim": data_fim,
             "status": "FAILED",
-            "error": str(error)
+            "erro": str(error)
         }).eq("id", airflow_id).execute()

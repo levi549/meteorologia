@@ -1,8 +1,25 @@
 FROM python:3.12-slim
 
+RUN pip install \
+    "supabase>=2.30.0" \
+    "python-dotenv>=1.2.2" \
+    "requests>=2.34.2"
 WORKDIR /app
 
 ENV PYTHONPATH="/app"
 
-COPY ./src/class_file.py /app
+COPY ./src/class_file.py /app/src/class_file.py
+COPY ./src/logs.py /app/src/logs.py
 COPY  main.py /app 
+
+"""ingestion:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingestion
+    container_name: ingestion
+    env_file:
+      - .env
+    networks:
+      - minha-rede
+    volumes:
+- ./src:/app"""

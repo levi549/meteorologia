@@ -13,8 +13,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir dbt-postgres>=1.10.0
 
 COPY ./dbt /app/dbt
-COPY ./packages.yml /app/
-COPY ./package-lock.yml /app/
-COPY ./dbt_project.yml /app
-COPY ./profiles.yml /app
+COPY ./packages.yml /app/packages.yml
+COPY ./package-lock.yml /app/package-lock.yml
+COPY ./dbt_project.yml /app/dbt_project.yml
+COPY ./profiles.yml /app/profiles.yml   
+RUN dbt deps
 CMD ["dbt", "debug"]

@@ -26,6 +26,6 @@ target/
 
 # UV
 uv.lock
-
-.gitinore
+modelos/
+.gitignore
 

@@ -1,9 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from src.ML import ML_kmeans
 from pyspark.sql import functions as F
 from pyspark.ml.feature import  VectorAssembler
 from pyspark.sql.window import Window
 import os
 from src.logs import log
+from src.predicate import Predicate
 def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
     gerenciador=log()
     with gerenciador.log_job("kmeans_job",id) as logger:
@@ -15,30 +19,26 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
             table="""(SELECT (
-                SELECT COALESCE(MAX(ultima_dt_processada), 0) 
+                SELECT COALESCE(MAX(ultima_dt_processada), '1970-01-01 00:00:00+00'::timestamptz) 
                 FROM public.log_job
                 WHERE nome_job = 'kmeans_job' 
                 AND status = 'SUCCESS'
-            ) as min_dt, MAX(ingested_at) as max_dt FROM public.dados_gold_kmeans) as limites""",
+            ) as min_dt, MAX(ingested_at) as max_dt,
+            MAX(dt) as max_dt2, MIN(dt) as min_dt2
+            FROM public.gold_dados_kmeans) as limites""",
             properties=PROPRIEDADES
         ).first()
             
         v_min = limites["min_dt"] 
-        v_max = limites["max_dt"] 
-
+        v_max = limites["max_dt"]
+        v_min2 = limites["min_dt2"]
+        v_max2 = limites["max_dt2"]
+        predicates=Predicate(v_min, v_max, v_min2, v_max2,10).gerar_predicate()
         df=spark.read.jdbc( 
         url=URL_SUPABASE,
-        table=f""" (
-            SELECT * FROM public.dados_gold_kmeans
-            WHERE ingested_at >= '{v_min}' 
-            AND ingested_at <= '{v_max}'
-        ) as dados
-        """,
-        column="ingested_at",
-        lowerBound=str(v_min),
-        upperBound=str(v_max),
-        numPartitions=10,
-        properties=PROPRIEDADES
+        table="public.gold_dados_kmeans",
+        properties=PROPRIEDADES,
+        predicates=predicates
         )
             
         assembler=VectorAssembler(inputCols=[
@@ -60,7 +60,8 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
             F.col("temp_padronizado").alias("temp"),
             F.col("humidity_padronizado").alias("humidity"),
             F.col("pressure_padronizada").alias("pressure"),
-            "prediction").withColumnRenamed("prediction","Nivel_de_alerta")
+            "prediction").withColumnRenamed("prediction","Nivel_de_alerta").withColumn("ingested_at", F.current_timestamp())
+
 
         df_final.write.jdbc(
             url=URL_SUPABASE,   
@@ -68,7 +69,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
             mode="append",
             properties=PROPRIEDADES
         )
-        logger.ultimo_id_processados=v_max
+        logger.ultima_dt_processada=v_max
         if write_parfquet:
             df_final.write\
             .mode("overwrite")\

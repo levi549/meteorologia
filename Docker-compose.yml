@@ -14,25 +14,29 @@ services:
     depends_on:
       - dbt
       - pyspark
-      - ingestion
     networks:
+    
       - minha-rede
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - /var/run/docker.sock:/var/run/docker.sock
+      
 
   dbt:
     build:
       context: .
       dockerfile: Dockerfile.dbt
     container_name: dbt
+    
     environment:
       - DBT_PROFILES_DIR=/app 
     env_file:
       - .env
     networks:
       - minha-rede
+    dns:
+      - 8.8.8.8
     volumes:
       - ./dbt:/app/dbt
 
@@ -47,17 +51,8 @@ services:
       - minha-rede
     volumes:
       - ./parquet:/app/parquet
-  ingestion:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestion
-    container_name: ingestion
-    env_file:
-      - .env
-    networks:
-      - minha-rede
-    volumes:
-      - ./src:/app
+      - ./modelos:/app/modelos
+
 
 networks:
   minha-rede:
