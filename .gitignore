@@ -29,3 +29,4 @@ uv.lock
 modelos/
 .gitignore
 .user.yml
+Docker-compose.yml
