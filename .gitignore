@@ -28,4 +28,4 @@ target/
 uv.lock
 modelos/
 .gitignore
-
+user.yml
