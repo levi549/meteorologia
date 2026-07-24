@@ -13,7 +13,7 @@ def job_kmeans_train(URL_SUPABASE, PROPRIEDADES, spark,id=None):
     with gerenciador.log_job("kmeans_job_train",id) as logger:
         print("Iniciando o processo de treinamento do modelo KMeans")
         caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        caminho_modelo = os.path.join(caminho_atual, "modelos")
+        caminho_modelo = os.path.join(caminho_atual, "modelos/kmeans")
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
             table="""(

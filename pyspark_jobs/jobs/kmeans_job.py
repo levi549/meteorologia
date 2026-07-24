@@ -1,5 +1,6 @@
 import sys
 import os
+import shutil
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from src.ML import ML_kmeans
 from pyspark.sql import functions as F
@@ -15,7 +16,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
 
         caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         caminho_parquet = os.path.join(caminho_atual, "parquet")
-        caminho_modelo = os.path.join(caminho_atual, "modelos", "kmeans_model")
+        caminho_modelo = os.path.join(caminho_atual, "modelos/kmeans")
         limites = spark.read.jdbc(
             url=URL_SUPABASE,
             table="""(SELECT (
@@ -61,18 +62,28 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
             F.col("humidity_padronizado").alias("humidity"),
             F.col("pressure_padronizada").alias("pressure"),
             "prediction").withColumnRenamed("prediction","Nivel_de_alerta").withColumn("ingested_at", F.current_timestamp())
-
-
-        df_final.write.jdbc(
-            url=URL_SUPABASE,   
-            table="public.kmeans_resultado",
-            mode="append",
-            properties=PROPRIEDADES
-        )
-        logger.ultima_dt_processada=v_max
+        
         if write_parfquet:
+            if os.path.exists(caminho_parquet):
+                shutil.rmtree(caminho_parquet, ignore_errors=True)
             df_final.write\
-            .mode("overwrite")\
+            .mode("append")\
             .parquet(caminho_parquet)
             print(f"Dados do clustering KMeans gravados no formato Parquet em: {caminho_parquet}")
+            df_parquet = spark.read.parquet(caminho_parquet)
+            df_parquet.write.jdbc(
+                url=URL_SUPABASE,   
+                table="public.kmeans_resultado_staging",
+                mode="overwrite",
+                properties=PROPRIEDADES
+            )
+        else:
+            df_final.write.jdbc(
+                url=URL_SUPABASE,   
+                table="public.kmeans_resultado_staging",
+                mode="overwrite",
+                properties=PROPRIEDADES
+            )
+        logger.ultima_dt_processada=v_max
+       
         print("Processo de clustering KMeans concluído com sucesso.")  

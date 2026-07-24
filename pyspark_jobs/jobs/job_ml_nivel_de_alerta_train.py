@@ -13,9 +13,9 @@ def job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=
     with gerenciador.log_job("ml_nivel_de_alerta_train",id) as logger:
         print("Iniciando o processo de treinamento do modelo de classificação supervisionada")
         caminho_atual = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        caminho_modelo = os.path.join(caminho_atual, "modelos", "ml_nivel_de_alerta_model")
+        caminho_modelo = os.path.join(caminho_atual, "modelos/randomflorest")
         if not read_parquet:
-            caminho_parquet = os.path.join(caminho_atual, "parquet")
+
             limites = spark.read.jdbc(
                 url=URL_SUPABASE,
                 table="""(SELECT 
@@ -53,6 +53,7 @@ def job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=
             ml_supervisionado.save_model(caminho_modelo)
             logger.ultimo_id_processado = v_max
         else:
+            caminho_parquet = os.path.join(caminho_atual, "parquet")
             df=spark.read.parquet(caminho_parquet).dropna()
             assembler=VectorAssembler(inputCols=[
                 "mes_sin", 
@@ -66,6 +67,6 @@ def job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=
             ml_supervisionado=ML_nivel_de_alerta()
             ml_supervisionado.treino(df_features)
             ml_supervisionado.save_model(caminho_modelo)
-            logger.ultimo_id_processado = df.agg({"ingested_at": "max"}).collect()[0][0]
+            logger.ultima_dt_processada = df.agg({"ingested_at": "max"}).collect()[0][0]
     print("Treinamento do modelo de classificação supervisionada concluído")
 
