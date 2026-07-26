@@ -9,6 +9,7 @@ from pyspark.sql.window import Window
 import os
 from src.logs import log
 from src.predicate import Predicate
+import pyscopg2
 def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
     gerenciador=log()
     with gerenciador.log_job("kmeans_job",id) as logger:

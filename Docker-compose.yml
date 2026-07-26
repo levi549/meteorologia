@@ -45,6 +45,8 @@ services:
       context: .
       dockerfile: Dockerfile.pyspark
     container_name: pyspark_job
+    ports:
+      - "5000:5000"
     env_file:
       - .env
     networks:
