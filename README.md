@@ -1,40 +1,6 @@
-# 🌩️ Climate Anomaly Intelligence Platform
-
-<div align="center">
-
-![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Apache Airflow](https://img.shields.io/badge/Airflow-3.2+-017CEE?style=for-the-badge&logo=apacheairflow&logoColor=white)
-![PySpark](https://img.shields.io/badge/PySpark-4.1+-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)
-![dbt](https://img.shields.io/badge/dbt-1.10+-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-
-**Plataforma end-to-end para detecção, classificação e previsão de anomalias climáticas.**
-Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em uma pipeline de processamento distribuída, gerando predições de anomalias via Machine Learning supervisionado.(OBS:Em fase final de desenvolvimento)
-
-[![Repo](https://img.shields.io/badge/GitHub-levi549%2Fmeteorologia-181717?style=flat-square&logo=github)](https://github.com/levi549/meteorologia)
-[![Issues](https://img.shields.io/badge/Issues-Report%20Bug-red?style=flat-square&logo=github)](https://github.com/levi549/meteorologia/issues)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](#)
-
-</div>
-
----
- 
-## 📑 Sumário
- 
-| | | |
-|---|---|---|
-| [📐 Arquitetura](#-arquitetura-1) | [🧩 Padrões](#-padrões-arquiteturais) | [🥉 Camadas](#-as-camadas-da-medallion-architecture) |
-| [✈️ Airflow](#-orquestração-airflow) | [📂 Estrutura](#-estrutura-de-diretórios) | [🎯 Decisões Técnicas](#-decisões-técnicas-justificadas) |
-| [🔄 Fluxo de Dados](#-fluxo-completo-de-dados) | [🐳 Deploy](#-deployment--containerização) | [📚 Stack](#-stack-tecnológico) |
- 
----
- 
-
 ## 🛠️ Stack Tecnológica
 
 <div align="center">
-
 <table>
 <tr>
 <td align="center" width="120">
@@ -79,9 +45,15 @@ Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em 
 <sub>Latest</sub>
 </a>
 </td>
+<td align="center" width="120">
+<a href="https://mlflow.org/" target="_blank">
+<img src="https://cdn.simpleicons.org/mlflow/0194E2" width="48" height="48" alt="MLflow"/><br/>
+<b>MLflow</b><br/>
+<sub>3.14.0</sub>
+</a>
+</td>
 </tr>
 </table>
-
 </div>
 
 > 💡 Clique em qualquer ícone acima para acessar a documentação oficial da tecnologia.
