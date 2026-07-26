@@ -271,7 +271,7 @@ class ML_kmeans(ML):
 | **Abstract Base Classes (Strategy)** | `Datasource(ABC)` e `ML(ABC)` com implementações intercambiáveis | `src/class_file.py`, `src/ML.py` | Nova fonte de dados ou modelo = nova classe, sem alterar código existente |
 | **Incremental Processing (dbt)** | `unique_key` + `incremental_strategy='merge'` | `dbt/raw/*.sql`, `dbt/silver_gold/*.sql` | Evita reprocessar histórico inteiro a cada run, reduz custo e tempo |
 | **Distributed Partitioning** | Classe `Predicate` gera 10 WHERE clauses | `src/predicate.py` | Paraleliza leitura JDBC em 10 conexões simultâneas no Spark |
-| **Context Manager Logging e MLflow** | `log_job()` com try/yield/except/finally | `src/logs.py` | Garante status RUNNING/SUCCESS/FAILED consistente mesmo em falhas |
+| **Context Manager Logging e MLflow** | `log_job()` com try/yield/except/finally | `src/logs.py` | Garante status RUNNING/SUCCESS/FAILED consistente mesmo em falhas e log de metricas do treinamento e performace da ML |
 | **Feature Engineering Distribuído** | VectorAssembler + Z-Score em PySpark | `pyspark_jobs/jobs/*.py` | Processa volumes grandes de forma distribuída antes do treino |
 | **Encoding Cíclico Temporal** | `sin`/`cos` do mês | `dados_csv_silver.sql` | Representa continuidade sazonal (dez→jan são adjacentes) |
 | **DockerOperator por Task** | Cada task Airflow roda em container isolado | `dags/pipeline_main.py` | Isola dependências de cada etapa (dbt, PySpark) sem conflito de ambiente |
