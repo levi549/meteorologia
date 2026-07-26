@@ -10,7 +10,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 **Plataforma end-to-end para detecção, classificação e previsão de anomalias climáticas.**
-Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em uma pipeline de processamento distribuída, gerando predições de anomalias via Machine Learning supervisionado.
+Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em uma pipeline de processamento distribuída, gerando predições de anomalias via Machine Learning supervisionado.(OBS:Em fase final de desenvolvimento)
 
 [![Repo](https://img.shields.io/badge/GitHub-levi549%2Fmeteorologia-181717?style=flat-square&logo=github)](https://github.com/levi549/meteorologia)
 [![Issues](https://img.shields.io/badge/Issues-Report%20Bug-red?style=flat-square&logo=github)](https://github.com/levi549/meteorologia/issues)
@@ -91,7 +91,7 @@ Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em 
 
 <h2 id="-visão-geral">🔎 Visão Geral</h2>
  
-O **Meteorologia** é uma plataforma que ingere dados climáticos (histórico em CSV, API OpenWeather) e demográficos (API IBGE/SIDRA), processa-os através de camadas incrementais em SQL (dbt) e Spark (PySpark), e treina modelos de Machine Learning — KMeans para clusterização de níveis de alerta e Random Forest para classificação de anomalias. Todo o pipeline é orquestrado por Airflow e executado em containers Docker isolados, seguindo o padrão **Medallion Architecture** (Raw → Silver → Gold) como espinha dorsal do fluxo de dados.(OBS:EM fase final de desenvolvimento)
+O **Meteorologia** é uma plataforma que ingere dados climáticos (histórico em CSV, API OpenWeather) e demográficos (API IBGE/SIDRA), processa-os através de camadas incrementais em SQL (dbt) e Spark (PySpark), e treina modelos de Machine Learning — KMeans para clusterização de níveis de alerta e Random Forest para classificação de anomalias. Todo o pipeline é orquestrado por Airflow e executado em containers Docker isolados, seguindo o padrão **Medallion Architecture** (Raw → Silver → Gold) como espinha dorsal do fluxo de dados.
  
 ---
  
