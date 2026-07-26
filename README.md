@@ -9,6 +9,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![MLflow](https://img.shields.io/badge/MLflow-3.14.0-0194E2?style=for-the-badge&logo=mlflow&logoColor=white)
+
 **Plataforma end-to-end para detecção, classificação e previsão de anomalias climáticas.**
 Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em uma pipeline de processamento distribuída, gerando predições de anomalias via Machine Learning supervisionado.(OBS:Em fase final de desenvolvimento)
 
