@@ -542,5 +542,5 @@ flowchart TB
 ---
 
 <div align="center">
-<sub>Construído com 🌩️ por <a href="https://github.com/levi549">@levi549</a></sub>
+<sub>Construído  por <a href="https://github.com/levi549">@levi549</a></sub>
 </div>
