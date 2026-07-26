@@ -91,7 +91,7 @@ Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em 
 
 <h2 id="-visão-geral">🔎 Visão Geral</h2>
  
-O **Meteorologia** é uma plataforma que ingere dados climáticos (histórico em CSV, API OpenWeather) e demográficos (API IBGE/SIDRA), processa-os através de camadas incrementais em SQL (dbt) e Spark (PySpark), e treina modelos de Machine Learning — KMeans para clusterização de níveis de alerta e Random Forest para classificação de anomalias. Todo o pipeline é orquestrado por Airflow e executado em containers Docker isolados, seguindo o padrão **Medallion Architecture** (Raw → Silver → Gold) como espinha dorsal do fluxo de dados.
+O **Meteorologia** é uma plataforma que ingere dados climáticos (histórico em CSV, API OpenWeather) e demográficos (API IBGE/SIDRA), processa-os através de camadas incrementais em SQL (dbt) e Spark (PySpark), e treina modelos de Machine Learning — KMeans para clusterização de níveis de alerta e Random Forest para classificação de anomalias. Todo o pipeline é orquestrado por Airflow e executado em containers Docker isolados, seguindo o padrão **Medallion Architecture** (Raw → Silver → Gold) como espinha dorsal do fluxo de dados.(OBS:EM fase final de desenvolvimento)
  
 ---
  
@@ -271,7 +271,7 @@ class ML_kmeans(ML):
 | **Abstract Base Classes (Strategy)** | `Datasource(ABC)` e `ML(ABC)` com implementações intercambiáveis | `src/class_file.py`, `src/ML.py` | Nova fonte de dados ou modelo = nova classe, sem alterar código existente |
 | **Incremental Processing (dbt)** | `unique_key` + `incremental_strategy='merge'` | `dbt/raw/*.sql`, `dbt/silver_gold/*.sql` | Evita reprocessar histórico inteiro a cada run, reduz custo e tempo |
 | **Distributed Partitioning** | Classe `Predicate` gera 10 WHERE clauses | `src/predicate.py` | Paraleliza leitura JDBC em 10 conexões simultâneas no Spark |
-| **Context Manager Logging** | `log_job()` com try/yield/except/finally | `src/logs.py` | Garante status RUNNING/SUCCESS/FAILED consistente mesmo em falhas |
+| **Context Manager Logging e MLflow** | `log_job()` com try/yield/except/finally | `src/logs.py` | Garante status RUNNING/SUCCESS/FAILED consistente mesmo em falhas |
 | **Feature Engineering Distribuído** | VectorAssembler + Z-Score em PySpark | `pyspark_jobs/jobs/*.py` | Processa volumes grandes de forma distribuída antes do treino |
 | **Encoding Cíclico Temporal** | `sin`/`cos` do mês | `dados_csv_silver.sql` | Representa continuidade sazonal (dez→jan são adjacentes) |
 | **DockerOperator por Task** | Cada task Airflow roda em container isolado | `dags/pipeline_main.py` | Isola dependências de cada etapa (dbt, PySpark) sem conflito de ambiente |
