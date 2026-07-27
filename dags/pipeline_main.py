@@ -20,7 +20,7 @@ default_args = {
     default_args=default_args,
     description='orquestração da pipeline principal de meteorologia via Docker',
     schedule_interval='@once',
-    start_date=datetime(2026, 7, 10),
+    start_date=datetime(2026, 7, 26),
     catchup=False,
     on_failure_callback=log.log_erro,
     on_success_callback=log.log_sucesso,
@@ -34,7 +34,7 @@ def main_pipeline():
         logger.log_inicio(nome_pipeline='pipeline_meteorologia_main', airflow_id=airflow_id)
 
    
-    """ingestion_job = DockerOperator(
+    ingestion_job = DockerOperator(
         task_id='ingestion_job',
         image='meteorologia-ingestion:latest',
         command='python main.py',
@@ -47,9 +47,11 @@ def main_pipeline():
             'AIRFLOW_RUN_ID': '{{ run_id }}',
             'PYTHONPATH': '/app',
             'SUPABASE_URL': os.getenv("SUPABASE_URL"),
-            'SUPABASE_KEY': os.getenv("SUPABASE_KEY")
+            'SUPABASE_KEY': os.getenv("SUPABASE_KEY"),
+            'SIDRA_API':os.getenv("SIDRA_API"),
+            'IBGE_API':os.getenv("IBGE_API")
         }
-    )"""
+    )
 
    
     dbt_job = DockerOperator(
@@ -78,7 +80,8 @@ def main_pipeline():
         task_id='main_job',
         image='meteorologia-pyspark:latest',
         command='python /app/pyspark_jobs/main_job.py',
-        network_mode='host', 
+        network_mode='minha-rede', 
+        dns=['8.8.8.8', '1.1.1.1'],
         mount_tmp_dir=False,
         auto_remove=True,
         api_version='auto',
@@ -106,6 +109,6 @@ def main_pipeline():
    
     id_pipeline = '{{ run_id }}'
     
-    log_pipeline_inicio(id_pipeline)  >> dbt_job >> dbt_test_job >> run_main_job
+    log_pipeline_inicio(id_pipeline)>> ingestion_job >> dbt_job >> dbt_test_job >> run_main_job
 
 pipeline_main_dag = main_pipeline() 

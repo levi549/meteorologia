@@ -1,6 +1,8 @@
 from pyspark.ml.clustering import KMeans,KMeansModel
 from pyspark.ml.classification import RandomForestClassifier,RandomForestClassificationModel
 from abc import ABC, abstractmethod
+import mlflow
+import mlflow.pyspark.ml
 
 class ML(ABC):
     def __init__(self):
@@ -22,19 +24,23 @@ class ML_kmeans(ML):
     def __init__(self):
         super().__init__()
         self.Modelo=KMeans(featuresCol="features",predictionCol="prediction", k=3, seed=0)
+        mlflow.set_experiment("Kmeans")
+        mlflow.pysaprk.ml.autolog()
     def treino(self, data):
-        try:
-            self.Modelo_treinado=self.Modelo.fit(data)
-            print("Treinamento do modelo KMeans concluído com sucesso.")
-        except Exception as e:
-            print(f"Ocorreu um erro durante o treinamento do modelo KMeans: {e}")
-            raise e
+        with mlflow.start_run():
+            try:
+                self.Modelo_treinado=self.Modelo.fit(data)
+                print("Treinamento do modelo KMeans concluído com sucesso.")
+            except Exception as e:
+                print(f"Ocorreu um erro durante o treinamento do modelo KMeans: {e}")
+                raise e
     def predict(self, data):
-        try:
-         return self.Modelo_treinado.transform(data)
-        except Exception as e:
-            print(f"Ocorreu um erro durante a previsão com o modelo KMeans: {e}")
-            raise e
+         with mlflow.start_run():
+            try:
+                return self.Modelo_treinado.transform(data)
+            except Exception as e:
+                print(f"Ocorreu um erro durante a previsão com o modelo KMeans: {e}")
+                raise e
     def save_model(self, path):
         try:
             self.Modelo_treinado.write().overwrite().save(path)
@@ -65,23 +71,26 @@ class ML_RandomForest(ML):
 class ML_nivel_de_alerta(ML_RandomForest):
     def __init__(self):
         super().__init__(predictionCol="prediction_alerta", labelCol="nivel_de_alerta")
-
+        mlflow.set_experiment("ML_nivel_de_alerta")
+        mlflow.pysaprk.ml.autolog()
 
     def treino(self, data):
-        try:
-            self.Modelo_treinado=self.Modelo.fit(data)
-           
-            print("Treinamento do modelo de classificação supervisionada de nivel de alerta concluído com sucesso.")
-        except Exception as e:
-            print(f"Ocorreu um erro durante o treinamento do modelo de classificação supervisionada de nivel de alerta: {e}")
-            raise e
+         with mlflow.start_run():
+            try:
+                self.Modelo_treinado=self.Modelo.fit(data)
+            
+                print("Treinamento do modelo de classificação supervisionada de nivel de alerta concluído com sucesso.")
+            except Exception as e:
+                print(f"Ocorreu um erro durante o treinamento do modelo de classificação supervisionada de nivel de alerta: {e}")
+                raise e
 
     def predict(self, data):
-        try:
-            return self.Modelo_treinado.transform(data)
-        except Exception as e:
-            print(f"Ocorreu um erro durante a previsão com o modelo de classificação supervisionada de nivel de alerta: {e}")
-            raise e
+         with mlflow.start_run():
+            try:
+                return self.Modelo_treinado.transform(data)
+            except Exception as e:
+                print(f"Ocorreu um erro durante a previsão com o modelo de classificação supervisionada de nivel de alerta: {e}")
+                raise e
     def save_model(self, path):
         try:
             self.Modelo_treinado.write().overwrite().save(path)
@@ -100,21 +109,23 @@ class ML_nivel_de_alerta(ML_RandomForest):
 class Ml_anomaly(ML_RandomForest):
     def __init__(self):
         super().__init__(predictionCol="prediction_anomaly", labelCol="anomaly_name")
-
+        mlflow.pysaprk.ml.autolog()
     def treino(self, data):
-        try:
-            self.Modelo_treinado=self.Modelo.fit(data)
-            print("Treinamento do modelo de classificação de anomalias concluído com sucesso.")
-        except Exception as e:
-            print(f"Ocorreu um erro durante o treinamento do modelo de classificação de anomalias: {e}")
-            raise e
+         with mlflow.start_run():
+            try:
+                self.Modelo_treinado=self.Modelo.fit(data)
+                print("Treinamento do modelo de classificação de anomalias concluído com sucesso.")
+            except Exception as e:
+                print(f"Ocorreu um erro durante o treinamento do modelo de classificação de anomalias: {e}")
+                raise e
 
     def predict(self, data):
-        try:
-            return self.Modelo_treinado.transform(data)
-        except Exception as e:
-            print(f"Ocorreu um erro durante a previsão com o modelo de classificação de anomalias: {e}")
-            raise e
+         with mlflow.start_run():
+            try:
+                return self.Modelo_treinado.transform(data)
+            except Exception as e:
+                print(f"Ocorreu um erro durante a previsão com o modelo de classificação de anomalias: {e}")
+                raise e
 
     def save_model(self, path):
         try:

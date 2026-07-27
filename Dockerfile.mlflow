@@ -1,0 +1,24 @@
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+    
+WORKDIR /app
+
+RUN pip install --no-cache-dir \
+    mlflow==3.14.0 \
+    gunicorn
+
+
+RUN mkdir -p /app/mlruns /app/sqlite_db
+
+EXPOSE 5000
+
+
+CMD ["mlflow", "server", \
+     "--host", "0.0.0.0", \
+     "--port", "5000", \
+     "--allowed-hosts", "*", \
+     "--cors-allowed-origins", "*", \
+     "--backend-store-uri", "sqlite:////tmp/mlflow.db", \
+     "--default-artifact-root", "/tmp/mlruns"]

@@ -6,7 +6,6 @@ from src.ML import ML_kmeans
 from pyspark.sql import functions as F
 from pyspark.ml.feature import  VectorAssembler
 from pyspark.sql.window import Window
-
 from src.predicate import Predicate
 def job_kmeans_train(URL_SUPABASE, PROPRIEDADES, spark,id=None):
     gerenciador=log()

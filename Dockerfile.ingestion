@@ -12,14 +12,3 @@ COPY ./src/class_file.py /app/src/class_file.py
 COPY ./src/logs.py /app/src/logs.py
 COPY  main.py /app 
 
-"""ingestion:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingestion
-    container_name: ingestion
-    env_file:
-      - .env
-    networks:
-      - minha-rede
-    volumes:
-- ./src:/app"""

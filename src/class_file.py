@@ -104,8 +104,8 @@ class IBGE_API(Datasource):
 
     def __init__(self,population=None):
         super().__init__()
-        self.api_ibge=os.getenv("IBGE_API")
-        self.sidra_api=os.getenv("SIDRA_API")
+        self.api_ibge=os.environ.get("IBGE_API")
+        self.sidra_api=os.environ.get("SIDRA_API")
         self.population=population or []
     def Extract(self):
         try:

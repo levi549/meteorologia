@@ -9,7 +9,7 @@ WORKDIR /app
 
 ENV PYTHONPATH="/app"
 
-
+EXPOSE 5000
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir setuptools && \
@@ -19,4 +19,4 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY ./pyspark_jobs /app/pyspark_jobs
 COPY ./src /app/src
 
-
+EXPOSE 5000

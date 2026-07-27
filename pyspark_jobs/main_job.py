@@ -1,14 +1,15 @@
 from pyspark.sql import SparkSession
 import os
 import sys
-from dotenv import load_dotenv  
+from dotenv import load_dotenv 
+import mlflow 
 load_dotenv()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from pyspark_jobs.jobs.kmeans_job import job_kmeans
 from pyspark_jobs.jobs.job_ml_nivel_de_alerta_train import job_ml_nivel_de_alerta_train
 from pyspark_jobs.jobs.job_kmeans_train import job_kmeans_train
-def main_job():
-   
+def main_job(): 
+    mlflow.set_tracking_uri("http://mlflow_server:5000")
     airflow_id = os.environ.get('AIRFLOW_RUN_ID')
     spark = SparkSession.builder \
         .appName("KMeans_Clustering") \

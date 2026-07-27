@@ -14,6 +14,7 @@ services:
     depends_on:
       - dbt
       - pyspark
+      - ingestion
     networks:
     
       - minha-rede
@@ -39,12 +40,23 @@ services:
       - 8.8.8.8
     volumes:
       - ./dbt:/app/dbt
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    container_name: mlflow_server
+    ports:
+      - 5001:5000
+    networks:
+      - minha-rede
 
   pyspark:
     build:
       context: .
       dockerfile: Dockerfile.pyspark
     container_name: pyspark_job
+    ports:
+      - 5000:5000
     env_file:
       - .env
     networks:
@@ -53,6 +65,17 @@ services:
       - ./parquet:/app/parquet
       - ./modelos:/app/modelos
 
+  ingestion:
+      build:
+        context: .
+        dockerfile: Dockerfile.ingestion
+      container_name: ingestion
+      env_file:
+        - .env
+      networks:
+        - minha-rede
+      volumes:
+      - ./src:/app
 
 networks:
   minha-rede:
