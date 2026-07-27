@@ -13,7 +13,7 @@ ENV PYTHONPATH="/app"
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir setuptools && \
-    pip install --no-cache-dir numpy pyspark==3.5.0 supabase==2.30.0 python-dotenv==1.2.2 mlflow==3.14.0 psycopg2-binary==2.9.6
+    pip install --no-cache-dir numpy pyspark==3.5.0 supabase==2.30.0 python-dotenv==1.2.2 mlflow==3.14.0 
 
 
 COPY ./pyspark_jobs /app/pyspark_jobs

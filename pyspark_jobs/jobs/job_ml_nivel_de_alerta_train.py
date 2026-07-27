@@ -45,7 +45,7 @@ def job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=
                 "temp",
                 "humidity",
                 "pressure",
-                "Nivel_de_alerta"
+                "nivel_de_alerta"
             ], outputCol="features")
             df_features=assembler.transform(df)
             ml_supervisionado=ML_nivel_de_alerta()
@@ -61,7 +61,7 @@ def job_ml_nivel_de_alerta_train(URL_SUPABASE, PROPRIEDADES, spark,read_parquet=
                 "temp",
                 "humidity",
                 "pressure",
-                "Nivel_de_alerta"
+                "nivel_de_alerta"
                 ], outputCol="features")
             df_features=assembler.transform(df)
             ml_supervisionado=ML_nivel_de_alerta()

@@ -64,7 +64,7 @@ class ML_RandomForest(ML):
 
 class ML_nivel_de_alerta(ML_RandomForest):
     def __init__(self):
-        super().__init__(predictionCol="prediction_alerta", labelCol="Nivel_de_alerta")
+        super().__init__(predictionCol="prediction_alerta", labelCol="nivel_de_alerta")
 
 
     def treino(self, data):

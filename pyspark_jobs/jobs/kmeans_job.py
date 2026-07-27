@@ -9,7 +9,6 @@ from pyspark.sql.window import Window
 import os
 from src.logs import log
 from src.predicate import Predicate
-import pyscopg2
 def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
     gerenciador=log()
     with gerenciador.log_job("kmeans_job",id) as logger:
@@ -62,7 +61,7 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
             F.col("temp_padronizado").alias("temp"),
             F.col("humidity_padronizado").alias("humidity"),
             F.col("pressure_padronizada").alias("pressure"),
-            "prediction").withColumnRenamed("prediction","Nivel_de_alerta").withColumn("ingested_at", F.current_timestamp())
+            "prediction").withColumnRenamed("prediction","nivel_de_alerta").withColumn("ingested_at", F.current_timestamp())
         
         if write_parfquet:
             if os.path.exists(caminho_parquet):
@@ -86,5 +85,60 @@ def job_kmeans(URL_SUPABASE, PROPRIEDADES, spark,write_parfquet=None,id=None):
                 properties=PROPRIEDADES
             )
         logger.ultima_dt_processada=v_max
-       
+        driver_manager = spark._sc._gateway.jvm.java.sql.DriverManager
+        conn = driver_manager.getConnection(URL_SUPABASE,PROPRIEDADES["user"],PROPRIEDADES["password"])
+        stmt = conn.createStatement()
+        query="""
+           MERGE INTO public.kmeans_resultado AS t
+            USING public.kmeans_resultado_staging AS o
+            ON (t.id = o.id)
+
+            WHEN MATCHED THEN
+            UPDATE SET
+                dt = o.dt,
+                anomaly_name = o.anomaly_name,
+                mes_sin = o.mes_sin,
+                mes_cos = o.mes_cos,
+                temp = o.temp,
+                humidity = o.humidity,
+                pressure = o.pressure,
+                nivel_de_alerta = o.nivel_de_alerta,
+                ingested_at = o.ingested_at
+
+            WHEN NOT MATCHED THEN
+            INSERT (
+                id,
+                dt,
+                anomaly_name,
+                mes_sin,
+                mes_cos,
+                temp,
+                humidity,
+                pressure,
+                nivel_de_alerta,
+                ingested_at
+            )
+            VALUES (
+                o.id,
+                o.dt,
+                o.anomaly_name,
+                o.mes_sin,
+                o.mes_cos,
+                o.temp,
+                o.humidity,
+                o.pressure,
+                o.nivel_de_alerta,
+                o.ingested_at
+            )
+        
+        
+        """
+        query_truncate="""
+        TRUNCATE TABLE public.kmeans_resultado_staging;
+
+        """
+        stmt.execute(query)
+        stmt.execute(query_truncate)
+        stmt.close()
+        conn.close()
         print("Processo de clustering KMeans concluído com sucesso.")  
