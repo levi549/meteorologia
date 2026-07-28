@@ -25,7 +25,7 @@ class ML_kmeans(ML):
         super().__init__()
         self.Modelo=KMeans(featuresCol="features",predictionCol="prediction", k=3, seed=0)
         mlflow.set_experiment("Kmeans")
-        mlflow.pysaprk.ml.autolog()
+        mlflow.pyspark.ml.autolog()
     def treino(self, data):
         with mlflow.start_run():
             try:
@@ -72,7 +72,7 @@ class ML_nivel_de_alerta(ML_RandomForest):
     def __init__(self):
         super().__init__(predictionCol="prediction_alerta", labelCol="nivel_de_alerta")
         mlflow.set_experiment("ML_nivel_de_alerta")
-        mlflow.pysaprk.ml.autolog()
+        mlflow.pyspark.ml.autolog()
 
     def treino(self, data):
          with mlflow.start_run():
@@ -109,7 +109,8 @@ class ML_nivel_de_alerta(ML_RandomForest):
 class Ml_anomaly(ML_RandomForest):
     def __init__(self):
         super().__init__(predictionCol="prediction_anomaly", labelCol="anomaly_name")
-        mlflow.pysaprk.ml.autolog()
+        mlflow.set_experiment("ML_anomaly")
+        mlflow.pyspark.ml.autolog()
     def treino(self, data):
          with mlflow.start_run():
             try:

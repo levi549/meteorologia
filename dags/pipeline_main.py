@@ -90,7 +90,8 @@ def main_pipeline():
             'SUPABASE_URL': os.getenv("SUPABASE_URL"),
             'SUPABASE_KEY': os.getenv("SUPABASE_KEY"),
             'SUPABASE_PASSWORD': os.getenv("SUPABASE_PASSWORD"),
-            'SUPABASE_POSTGRESQL_URL': os.getenv("SUPABASE_POSTGRESQL_URL")
+            'SUPABASE_POSTGRESQL_URL': os.getenv("SUPABASE_POSTGRESQL_URL"),
+            'USER':os.getenv("USER")
         },
         mounts=[
             Mount(

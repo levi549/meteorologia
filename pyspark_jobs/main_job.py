@@ -19,7 +19,7 @@ def main_job():
 
     URL_SUPABASE =os.environ.get("SUPABASE_POSTGRESQL_URL")
     PROPRIEDADES = {
-        "user": "postgres",
+        "user": os.environ.get("USER"),
         "password": os.environ.get("SUPABASE_PASSWORD"),
         "driver": "org.postgresql.Driver"}
 
