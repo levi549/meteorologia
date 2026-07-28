@@ -10,8 +10,8 @@
 ![Docker](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![MLflow](https://img.shields.io/badge/MLflow-3.14.0-0194E2?style=for-the-badge&logo=mlflow&logoColor=white)
 
-**Plataforma end-to-end para detecção, classificação e previsão de anomalias climáticas.**
-Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em uma pipeline de processamento distribuída, gerando predições de anomalias via Machine Learning supervisionado.(OBS:Em fase final de desenvolvimento)
+**End-to-end platform for detection, classification, and forecasting of climate anomalies.**
+Integrates multiple data sources (weather APIs, IBGE, historical records) into a distributed processing pipeline, generating anomaly predictions via supervised Machine Learning.
 
 [![Repo](https://img.shields.io/badge/GitHub-levi549%2Fmeteorologia-181717?style=flat-square&logo=github)](https://github.com/levi549/meteorologia)
 [![Issues](https://img.shields.io/badge/Issues-Report%20Bug-red?style=flat-square&logo=github)](https://github.com/levi549/meteorologia/issues)
@@ -21,18 +21,18 @@ Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em 
 
 ---
  
-## 📑 Sumário
+## 📑 Summary
  
 | | | |
 |---|---|---|
-| [📐 Arquitetura](#-arquitetura-1) | [🧩 Padrões](#-padrões-arquiteturais) | [🥉 Camadas](#-as-camadas-da-medallion-architecture) |
-| [✈️ Airflow](#-orquestração-airflow) | [📂 Estrutura](#-estrutura-de-diretórios) | [🎯 Decisões Técnicas](#-decisões-técnicas-justificadas) |
-| [🔄 Fluxo de Dados](#-fluxo-completo-de-dados) | [🐳 Deploy](#-deployment--containerização) | [📚 Stack](#-stack-tecnológico) |
+| [📐 Architecture](#-architecture-1) | [🧩 Patterns](#-architectural-patterns) | [🥉 Layers](#-the-medallion-architecture-layers) |
+| [✈️ Airflow](#-orchestration-airflow) | [📂 Structure](#-directory-structure) | [🎯 Technical Decisions](#-justified-technical-decisions) |
+| [🔄 Data Flow](#-complete-data-flow) | [🐳 Deploy](#-deployment--containerization) | [📚 Stack](#-technology-stack-1) |
  
 ---
  
 
-## 🛠️ Stack Tecnológica
+## 🛠️ Technology Stack
 
 <div align="center">
 <table>
@@ -90,27 +90,27 @@ Integra múltiplas fontes de dados (APIs meteorológicas, IBGE, históricos) em 
 </table>
 </div>
 
-> 💡 Clique em qualquer ícone acima para acessar a documentação oficial da tecnologia.
+> 💡 Click any icon above to access the official documentation for that technology.
 
 ---
-# 🏗️ Arquitetura do Meteorologia
+# 🏗️ Meteorologia Architecture
 
-<h2 id="-visão-geral">🔎 Visão Geral</h2>
+<h2 id="-overview">🔎 Overview</h2>
  
-O **Meteorologia** é uma plataforma que ingere dados climáticos (histórico em CSV, API OpenWeather) e demográficos (API IBGE/SIDRA), processa-os através de camadas incrementais em SQL (dbt) e Spark (PySpark), e treina modelos de Machine Learning — KMeans para clusterização de níveis de alerta e Random Forest para classificação de anomalias. Todo o pipeline é orquestrado por Airflow e executado em containers Docker isolados, seguindo o padrão **Medallion Architecture** (Raw → Silver → Gold) como espinha dorsal do fluxo de dados.
+**Meteorologia** is a platform that ingests climate data (historical CSV, OpenWeather API) and demographic data (IBGE/SIDRA API), processes it through incremental layers in SQL (dbt) and Spark (PySpark), and trains Machine Learning models — KMeans for alert-level clustering and Random Forest for anomaly classification. Throughout training and inference, every PySpark ML job connects to MLflow (tracking server at `http://localhost:5001`) to log parameters, metrics, and model artifacts for full experiment traceability. The entire pipeline is orchestrated by Airflow and executed in isolated Docker containers, following the **Medallion Architecture** pattern (Raw → Silver → Gold) as the backbone of the data flow.
  
 ---
  
-<h2 id="-arquitetura-1">📐 Arquitetura</h2>
+<h2 id="-architecture-1">📐 Architecture</h2>
  
-A arquitetura é dividida em 4 grandes blocos, cada um com responsabilidade única e desacoplada dos demais:
+The architecture is divided into 4 major blocks, each with a single responsibility, decoupled from the others:
  
 ```mermaid
 flowchart TB
-    subgraph Ingestão["🐍 Ingestão (Python/POO)"]
+    subgraph Ingestion["🐍 Ingestion (Python/OOP)"]
         I1[Datasource ABC]
     end
-    subgraph Transformação["🔧 Transformação (dbt)"]
+    subgraph Transformation["🔧 Transformation (dbt)"]
         T1[Silver Models]
         T2[Gold Models]
     end
@@ -118,31 +118,35 @@ flowchart TB
         M1[KMeans]
         M2[Random Forest]
     end
-    subgraph Orquestração["✈️ Orquestração (Airflow + Docker)"]
+    subgraph Tracking["📊 Experiment Tracking"]
+        MF[MLflow Server<br/>localhost:5001]
+    end
+    subgraph Orquestração["✈️ Orchestration (Airflow + Docker)"]
         O1[DAG pipeline_meteorologia_main]
     end
  
-    Ingestão --> Transformação --> MLLayer
-    Orquestração -.orquestra.-> Ingestão
-    Orquestração -.orquestra.-> Transformação
-    Orquestração -.orquestra.-> MLLayer
+    Ingestion --> Transformation --> MLLayer
+    MLLayer -.logs params/metrics/models.-> MF
+    Orquestração -.orchestrates.-> Ingestion
+    Orquestração -.orchestrates.-> Transformation
+    Orquestração -.orchestrates.-> MLLayer
 ```
  
-**Princípios de design**:
-- **Desacoplamento por camada**: cada camada (Raw/Silver/Gold/ML) só conhece a interface da camada anterior, nunca sua implementação interna.
-- **Extensibilidade via ABC**: novas fontes de dados ou modelos são adicionados como novas classes, sem alterar código existente (Open/Closed Principle).
-- **Idempotência e incrementalidade**: toda escrita usa upsert ou merge, permitindo re-execução segura da pipeline.
-- **Observabilidade**: toda execução (job e pipeline) é registrada transacionalmente via context managers em `src/logs.py`.
+**Design principles**:
+- **Decoupling by layer**: each layer (Raw/Silver/Gold/ML) only knows the interface of the previous layer, never its internal implementation.
+- **Extensibility via ABC**: new data sources or models are added as new classes, without modifying existing code (Open/Closed Principle).
+- **Idempotency and incrementality**: every write uses upsert or merge, allowing safe pipeline re-execution.
+- **Observability**: every execution (job and pipeline) is transactionally logged via context managers in `src/logs.py`, and every ML training run is additionally logged to **MLflow** for run-level metric and artifact tracking.
 ---
  
-<h2 id="-as-camadas-da-medallion-architecture">🥉🥈🥇 As Camadas da Medallion Architecture</h2>
+<h2 id="-the-medallion-architecture-layers">🥉🥈🥇 The Medallion Architecture Layers</h2>
  
 ### Raw Layer
  
-- **Responsabilidade**: ingestão bruta de dados de múltiplas fontes heterogêneas, sem transformação.
-- **Localização**: `src/class_file.py`, entry point em `main.py`.
-- **Padrões**: Abstract Base Class + Strategy Pattern.
-- **Fluxo de dados**: CSV histórico / API OpenWeather / API IBGE-SIDRA → `Extract()` → `Load()` (upsert) → tabelas `raw_csv`, `raw_wheather_api`, `raw_ibge` no Supabase.
+- **Responsibility**: raw ingestion of data from multiple heterogeneous sources, without transformation.
+- **Location**: `src/class_file.py`, entry point in `main.py`.
+- **Patterns**: Abstract Base Class + Strategy Pattern.
+- **Data flow**: Historical CSV / OpenWeather API / IBGE-SIDRA API → `Extract()` → `Load()` (upsert) → tables `raw_csv`, `raw_wheather_api`, `raw_ibge` in Supabase.
 ```python
 class Datasource(ABC):
     @abstractmethod
@@ -160,18 +164,18 @@ class CSV(Datasource):
         ).execute()
 ```
  
-- **`API_wheather`**: faz fetch na OpenWeather API por cidade e grava JSON bruto em `raw_wheather_api`.
-- **`IBGE_API`**: busca IDs de municípios e dados populacionais (SIDRA) e grava JSON em `raw_ibge`.
-- **Conexão**: `Supabase.create_client()` com credenciais lidas via `.env`.
-- **Tabelas envolvidas**: `raw_csv`, `raw_wheather_api`, `raw_ibge`.
+- **`API_wheather`**: fetches from the OpenWeather API per city and writes raw JSON to `raw_wheather_api`.
+- **`IBGE_API`**: fetches municipality IDs and population data (SIDRA) and writes JSON to `raw_ibge`.
+- **Connection**: `Supabase.create_client()` with credentials read via `.env`.
+- **Tables involved**: `raw_csv`, `raw_wheather_api`, `raw_ibge`.
 ### Silver Layer
  
-- **Responsabilidade**: limpeza, imputação de nulos e engenharia de atributos temporais via SQL declarativo.
-- **Localização**: `dbt/raw/dados_csv_silver.sql`, `dbt/raw/dados_ibge_silver.sql`.
-- **Padrões**: Incremental Processing (`unique_key='id'`, `incremental_strategy='merge'`).
-- **Fluxo de dados**: `raw_csv` → mediana por `city_id` + encoding cíclico + surrogate key → `dados_csv_silver`; `raw_ibge` (JSON) → `jsonb_path_query` + `jsonb_each` → `dados_ibge_silver`.
+- **Responsibility**: cleaning, null imputation, and temporal feature engineering via declarative SQL.
+- **Location**: `dbt/raw/dados_csv_silver.sql`, `dbt/raw/dados_ibge_silver.sql`.
+- **Patterns**: Incremental Processing (`unique_key='id'`, `incremental_strategy='merge'`).
+- **Data flow**: `raw_csv` → median by `city_id` + cyclical encoding + surrogate key → `dados_csv_silver`; `raw_ibge` (JSON) → `jsonb_path_query` + `jsonb_each` → `dados_ibge_silver`.
 ```sql
--- dados_csv_silver.sql (trecho real)
+-- dados_csv_silver.sql (actual excerpt)
 {{ config(materialized='incremental', unique_key='id', incremental_strategy='merge') }}
  
 select
@@ -194,7 +198,7 @@ where ingested_at > (select max(ingested_at) from {{ this }})
 ```
  
 ```sql
--- dados_ibge_silver.sql (trecho real)
+-- dados_ibge_silver.sql (actual excerpt)
 select
     jsonb_path_query(payload, '$[*].resultados[*].series[*]') as serie,
     ingested_at
@@ -202,15 +206,15 @@ from raw_ibge,
 lateral jsonb_each(serie -> 'serie') as valores
 ```
  
-- **Tabelas/Modelos**: `dados_csv_silver` (`id, city_name, dt, mes_sin, mes_cos, temp, humidity, pressure, weather_main, anomaly_name, ingested_at`), `dados_ibge_silver` (`nome, populacao, ingested_at`).
+- **Tables/Models**: `dados_csv_silver` (`id, city_name, dt, mes_sin, mes_cos, temp, humidity, pressure, weather_main, anomaly_name, ingested_at`), `dados_ibge_silver` (`nome, populacao, ingested_at`).
 ### Gold Layer
  
-- **Responsabilidade**: padronização estatística (Z-Score) das variáveis para consumo direto por ML.
-- **Localização**: `dbt/silver_gold/gold_dados_kmeans.sql`.
-- **Padrões**: Incremental merge automático + tratamento de divisão por zero.
-- **Fluxo de dados**: `dados_csv_silver` → estatísticas (média/stddev por `city_name`) → Z-Score → `gold_dados_kmeans`.
+- **Responsibility**: statistical standardization (Z-Score) of variables for direct ML consumption.
+- **Location**: `dbt/silver_gold/gold_dados_kmeans.sql`.
+- **Patterns**: Automatic incremental merge + division-by-zero handling.
+- **Data flow**: `dados_csv_silver` → statistics (mean/stddev by `city_name`) → Z-Score → `gold_dados_kmeans`.
 ```sql
--- gold_dados_kmeans.sql (trecho real)
+-- gold_dados_kmeans.sql (actual excerpt)
 with stats as (
     select city_name,
            avg(temp) as media_temp, stddev(temp) as stddev_temp,
@@ -232,13 +236,13 @@ from dados_csv_silver s
 left join stats on s.city_name = stats.city_name
 ```
  
-- **Tabelas/Modelos**: `gold_dados_kmeans` (`id, dt, mes_sin, mes_cos, temp_padronizado, humidity_padronizado, pressure_padronizada, anomaly_name, ingested_at`).
+- **Tables/Models**: `gold_dados_kmeans` (`id, dt, mes_sin, mes_cos, temp_padronizado, humidity_padronizado, pressure_padronizada, anomaly_name, ingested_at`).
 ### ML Layer
  
-- **Responsabilidade**: treino e inferência de modelos de clusterização e classificação sobre features padronizadas.
-- **Localização**: `src/ML.py`, `pyspark_jobs/jobs/*.py`.
-- **Padrões**: Hierarquia ABC + Distributed Partitioning (via `Predicate`).
-- **Fluxo de dados**: `gold_dados_kmeans` (JDBC, 10 partições) → VectorAssembler → KMeans → `kmeans_resultado` → VectorAssembler (com `Nivel_de_alerta`) → Random Forest → `/modelos/`.
+- **Responsibility**: training and inference of clustering and classification models over standardized features. Every training run in this layer is tracked in **MLflow**, whose tracking server runs at `http://localhost:5001` — parameters (e.g. `k=3` for KMeans, tree count for Random Forest), evaluation metrics, and the resulting model artifacts are all logged there for later comparison and reproducibility.
+- **Location**: `src/ML.py`, `pyspark_jobs/jobs/*.py`.
+- **Patterns**: ABC Hierarchy + Distributed Partitioning (via `Predicate`).
+- **Data flow**: `gold_dados_kmeans` (JDBC, 10 partitions) → VectorAssembler → KMeans → `kmeans_resultado` → VectorAssembler (with `Nivel_de_alerta`) → Random Forest → `/modelos/`, with each run additionally logged to the MLflow tracking server at `localhost:5001`.
 ```python
 class ML(ABC):
     @abstractmethod
@@ -251,12 +255,16 @@ class ML(ABC):
     def load_model(self, path): ...
  
 class ML_kmeans(ML):
+    mlflow.pyspark.ml.autolog()
     def treino(self, data):
+     with mlflow.start_run():
         self.model = KMeans(k=3, seed=0,
                              featureCol="features",
                              predictionCol="prediction").fit(data)
+    
  
     def predict(self, data):
+     with mlflow.start_run():
         return self.model.transform(data)
  
     def save_model(self, path):
@@ -266,35 +274,36 @@ class ML_kmeans(ML):
         self.model = KMeansModel.load(path)
 ```
  
-- **Tabelas/Modelos**: `kmeans_resultado`, `log_job`, artefatos persistidos em `/modelos/`.
+- **Tables/Models**: `kmeans_resultado`, `log_job`, artifacts persisted to `/modelos/`, and run metadata (params, metrics, model artifacts) tracked in **MLflow** at `localhost:5001`.
 ---
  
-<h2 id="-padrões-arquiteturais">🧩 Padrões Arquiteturais</h2>
+<h2 id="-architectural-patterns">🧩 Architectural Patterns</h2>
  
-| Padrão | O Quê | Onde | Por Quê |
+| Pattern | What | Where | Why |
 |---|---|---|---|
-| **Medallion Architecture** | Separação Raw → Silver → Gold | Supabase (schemas) + dbt | Isola responsabilidades, permite reprocessamento e auditoria por camada |
-| **Abstract Base Classes (Strategy)** | `Datasource(ABC)` e `ML(ABC)` com implementações intercambiáveis | `src/class_file.py`, `src/ML.py` | Nova fonte de dados ou modelo = nova classe, sem alterar código existente |
-| **Incremental Processing (dbt)** | `unique_key` + `incremental_strategy='merge'` | `dbt/raw/*.sql`, `dbt/silver_gold/*.sql` | Evita reprocessar histórico inteiro a cada run, reduz custo e tempo |
-| **Distributed Partitioning** | Classe `Predicate` gera 10 WHERE clauses | `src/predicate.py` | Paraleliza leitura JDBC em 10 conexões simultâneas no Spark |
-| **Context Manager Logging e MLflow** | `log_job()` com try/yield/except/finally | `src/logs.py` | Garante status RUNNING/SUCCESS/FAILED consistente mesmo em falhas e log de metricas do treinamento e performace da ML |
-| **Feature Engineering Distribuído** | VectorAssembler + Z-Score em PySpark | `pyspark_jobs/jobs/*.py` | Processa volumes grandes de forma distribuída antes do treino |
-| **Encoding Cíclico Temporal** | `sin`/`cos` do mês | `dados_csv_silver.sql` | Representa continuidade sazonal (dez→jan são adjacentes) |
-| **DockerOperator por Task** | Cada task Airflow roda em container isolado | `dags/pipeline_main.py` | Isola dependências de cada etapa (dbt, PySpark) sem conflito de ambiente |
+| **Medallion Architecture** | Raw → Silver → Gold separation | Supabase (schemas) + dbt | Isolates responsibilities, enables reprocessing and auditing per layer |
+| **Abstract Base Classes (Strategy)** | `Datasource(ABC)` and `ML(ABC)` with interchangeable implementations | `src/class_file.py`, `src/ML.py` | New data source or model = new class, without modifying existing code |
+| **Incremental Processing (dbt)** | `unique_key` + `incremental_strategy='merge'` | `dbt/raw/*.sql`, `dbt/silver_gold/*.sql` | Avoids reprocessing the entire history on each run, reducing cost and time |
+| **Distributed Partitioning** | `Predicate` class generates 10 WHERE clauses | `src/predicate.py` | Parallelizes JDBC reads across 10 simultaneous connections in Spark |
+| **Context Manager Logging + MLflow** | `log_job()` with try/yield/except/finally | `src/logs.py` | Ensures consistent RUNNING/SUCCESS/FAILED status even on failures, and logs training metrics and ML performance to the MLflow server at `localhost:5001` |
+| **Distributed Feature Engineering** | VectorAssembler + Z-Score in PySpark | `pyspark_jobs/jobs/*.py` | Processes large volumes in a distributed way before training |
+| **Cyclical Temporal Encoding** | `sin`/`cos` of the month | `dados_csv_silver.sql` | Represents seasonal continuity (Dec→Jan are adjacent) |
+| **DockerOperator per Task** | Each Airflow task runs in an isolated container | `dags/pipeline_main.py` | Isolates dependencies of each step (dbt, PySpark) without environment conflicts |
+| **MLflow Experiment Tracking** | Every PySpark ML job logs params/metrics/artifacts to a tracking server | `pyspark_jobs/jobs/*.py`, tracking server at `http://localhost:5001` | Centralizes experiment history, enables run comparison across KMeans and Random Forest training iterations |
  
 ---
  
-<h2 id="-fluxo-completo-de-dados">🔄 Fluxo Completo de Dados</h2>
+<h2 id="-complete-data-flow">🔄 Complete Data Flow</h2>
  
 ```mermaid
 flowchart LR
-    subgraph Fontes
-        A1[CSV Histórico]
-        A2[API OpenWeather]
-        A3[API IBGE/SIDRA]
+    subgraph Sources
+        A1[Historical CSV]
+        A2[OpenWeather API]
+        A3[IBGE/SIDRA API]
     end
  
-    subgraph RAW["RAW (Supabase) — Python/POO"]
+    subgraph RAW["RAW (Supabase) — Python/OOP"]
         B1[raw_csv]
         B2[raw_wheather_api]
         B3[raw_ibge]
@@ -309,12 +318,13 @@ flowchart LR
         D1[gold_dados_kmeans]
     end
  
-    subgraph ML["ML (PySpark MLlib, 10 partições)"]
+    subgraph ML["ML (PySpark MLlib, 10 partitions)"]
         E1[KMeans → Nivel_de_alerta]
         E2[Random Forest → prediction_alerta]
     end
  
     F[(kmeans_resultado / Serving)]
+    MF[("MLflow Tracking Server<br/>localhost:5001")]
  
     A1 -->|upsert on_conflict| B1
     A2 -->|Extract/Load| B2
@@ -325,40 +335,45 @@ flowchart LR
  
     C1 -->|stats + Z-Score| D1
  
-    D1 -->|JDBC 10 partições - Predicate| E1
+    D1 -->|JDBC 10 partitions - Predicate| E1
     E1 --> F
     F -->|features + target| E2
     E2 --> F
+    E1 -.logs run.-> MF
+    E2 -.logs run.-> MF
 ```
  
-**Anotações**:
-- **Python (POO)** processa a camada Raw; **dbt (SQL)** processa Silver e parte do Gold; **PySpark** processa Gold→ML e toda a camada ML.
-- **Paralelização**: a classe `Predicate` divide o range de `ingested_at`/`dt` em 10 predicados WHERE, lidos simultaneamente via JDBC.
-- **Incrementalidade**: dbt usa `unique_key` e filtro por `ingested_at`; jobs PySpark consultam `log_job` para saber o último timestamp processado (fallback `1970-01-01` na primeira execução).
-### Detalhamento dos Jobs PySpark
+**Notes**:
+- **Python (OOP)** processes the Raw layer; **dbt (SQL)** processes Silver and part of Gold; **PySpark** processes Gold→ML and the entire ML layer.
+- **Parallelization**: the `Predicate` class splits the `ingested_at`/`dt` range into 10 WHERE predicates, read simultaneously via JDBC.
+- **Incrementality**: dbt uses `unique_key` and filters by `ingested_at`; PySpark jobs query `log_job` to determine the last processed timestamp (fallback `1970-01-01` on first execution).
+- **Experiment tracking**: both the KMeans and Random Forest training jobs connect to the MLflow tracking server at `http://localhost:5001`, logging hyperparameters, evaluation metrics, and the trained model artifact for each run.
+### PySpark Jobs Breakdown
  
 **`job_kmeans_train()`**
-1. Fetch limites (min/max de `ingested_at` e `dt`) da tabela `gold_dados_kmeans`.
-2. Gera 10 predicates via `Predicate`.
-3. Lê JDBC com predicates (10 partições paralelas).
-4. `VectorAssembler` com colunas: `mes_sin, mes_cos, temp_padronizado, humidity_padronizado, pressure_padronizada`.
-5. Instancia `ML_kmeans()` e chama `.treino(df_features)`.
-6. Salva modelo em `/modelos/`.
+1. Fetch limits (min/max of `ingested_at` and `dt`) from the `gold_dados_kmeans` table.
+2. Generate 10 predicates via `Predicate`.
+3. Read via JDBC with predicates (10 parallel partitions).
+4. `VectorAssembler` with columns: `mes_sin, mes_cos, temp_padronizado, humidity_padronizado, pressure_padronizada`.
+5. Instantiate `ML_kmeans()` and call `.treino(df_features)`.
+6. Log the run (parameters such as `k=3` and evaluation metrics) to **MLflow** at `localhost:5001`.
+7. Save the model to `/modelos/`.
 **`job_kmeans()`**
-1. Fetch limites a partir de `log_job` (fallback `1970-01-01` se primeira execução).
-2. Lê com predicates.
-3. Assembler dos mesmos features.
-4. Carrega modelo pré-treinado.
-5. `.predict()` → renomeia `"prediction"` para `"Nivel_de_alerta"`.
-6. Write JDBC em modo `append` para `kmeans_resultado`.
-7. Opcional: salva parquet em cache local para leitura rápida.
+1. Fetch limits from `log_job` (fallback `1970-01-01` if first execution).
+2. Read with predicates.
+3. Assemble the same features.
+4. Load the pre-trained model.
+5. `.predict()` → renames `"prediction"` to `"Nivel_de_alerta"`.
+6. Write via JDBC in `append` mode to `kmeans_resultado`.
+7. Optional: save parquet to local cache for fast reads.
 **`job_ml_nivel_de_alerta_train()`**
-1. Lê de `kmeans_resultado` (via predicates ou parquet cache).
-2. `.dropna()` para limpeza.
-3. `VectorAssembler` com: `mes_sin, mes_cos, temp, humidity, pressure, Nivel_de_alerta` (target incluído).
-4. Instancia `ML_nivel_de_alerta()` (Random Forest).
+1. Read from `kmeans_resultado` (via predicates or parquet cache).
+2. `.dropna()` for cleanup.
+3. `VectorAssembler` with: `mes_sin, mes_cos, temp, humidity, pressure, Nivel_de_alerta` (target included).
+4. Instantiate `ML_nivel_de_alerta()` (Random Forest).
 5. `.treino(df_features)`.
-6. Salva modelo em `/modelos/ml_nivel_de_alerta_model`.
+6. Log the run (hyperparameters and classification metrics) to **MLflow** at `localhost:5001`.
+7. Save the model to `/modelos/ml_nivel_de_alerta_model`.
 ```python
 # src/predicate.py
 class Predicate:
@@ -375,12 +390,12 @@ class Predicate:
  
 ---
  
-<h2 id="-orquestração-airflow">✈️ Orquestração (Airflow)</h2>
+<h2 id="-orchestration-airflow">✈️ Orchestration (Airflow)</h2>
  
-- **Localização**: `dags/pipeline_main.py`.
+- **Location**: `dags/pipeline_main.py`.
 - **DAG**: `pipeline_meteorologia_main`.
-**Configuração**:
-- `schedule_interval='@once'` (trigger manual)
+**Configuration**:
+- `schedule_interval='@once'` (manual trigger)
 - `start_date=datetime(2026, 7, 10)`
 - `catchup=False`
 - `on_failure_callback=log.log_erro`
@@ -390,21 +405,22 @@ flowchart LR
     T1[log_pipeline_inicio<br/>PythonOperator] --> T2[dbt_job<br/>DockerOperator]
     T2 --> T3[dbt_test_job<br/>DockerOperator]
     T3 --> T4[run_main_job<br/>DockerOperator]
+    T4 -.PySpark job logs run.-> MF[("MLflow Server<br/>localhost:5001")]
 ```
  
-**Detalhes do `DockerOperator`**:
-- Cada task usa imagem Docker específica (`meteorologia-dbt:latest`, `meteorologia-pyspark:latest`).
-- Network mode: `minha-rede` (bridge customizada).
-- Variáveis de ambiente injetadas do `.env`.
-- Mounts (bind mounts locais) para `/app/parquet` e `/app/modelos`.
-O logging transacional acompanha cada etapa: `log_pipeline_inicio` registra o início do pipeline (`status="RUNNING"`), e os callbacks Airflow atualizam o status final (`SUCCESS`/`FAILED`) com a exceção capturada, se houver.
+**`DockerOperator` details**:
+- Each task uses a specific Docker image (`meteorologia-dbt:latest`, `meteorologia-pyspark:latest`).
+- Network mode: `minha-rede` (custom bridge).
+- Environment variables injected from `.env`.
+- Mounts (local bind mounts) for `/app/parquet` and `/app/modelos`.
+Transactional logging follows every step: `log_pipeline_inicio` records the pipeline start (`status="RUNNING"`), and Airflow callbacks update the final status (`SUCCESS`/`FAILED`) with the captured exception, if any. Independently, the `run_main_job` task's PySpark ML jobs also report training runs directly to the **MLflow** tracking server at `http://localhost:5001`.
  
 ```python
 # src/logs.py
 class log:
     @contextmanager
     def log_job(self, nome_job, pipeline_id):
-        # INSERT com status="RUNNING"
+        # INSERT with status="RUNNING"
         try:
             yield
         except Exception as e:
@@ -418,14 +434,14 @@ class log_pipeline:
     def log_inicio(self):
         ...  # INSERT status="RUNNING"
     def log_sucesso(self, context):
-        ...  # UPDATE status="SUCCESS" (callback Airflow)
+        ...  # UPDATE status="SUCCESS" (Airflow callback)
     def log_erro(self, context):
         ...  # UPDATE status="FAILED" + exception
 ```
  
 ---
  
-<h2 id="-estrutura-de-diretórios">📂 Estrutura de Diretórios</h2>
+<h2 id="-directory-structure">📂 Directory Structure</h2>
  
 ```
 meteorologia/
@@ -433,10 +449,10 @@ meteorologia/
 │   ├── class_file.py          # Datasource(ABC) + CSV + API_wheather + IBGE_API
 │   ├── ML.py                  # ML(ABC) + ML_kmeans + ML_RandomForest + subclasses
 │   ├── logs.py                # log + log_pipeline (context managers)
-│   └── predicate.py           # Classe Predicate para gerar WHERE clauses
+│   └── predicate.py           # Predicate class for generating WHERE clauses
 ├── dbt/
 │   ├── raw/
-│   │   ├── dados_csv_silver.sql    # Imputação + encoding cíclico
+│   │   ├── dados_csv_silver.sql    # Imputation + cyclical encoding
 │   │   ├── dados_ibge_silver.sql   # JSON unpacking
 │   │   └── sources.yml
 │   ├── silver_gold/
@@ -445,46 +461,48 @@ meteorologia/
 │   ├── dbt_project.yml
 │   └── profiles.yml
 ├── pyspark_jobs/
-│   ├── main_job.py            # Inicializa Spark + orquestra 3 jobs
+│   ├── main_job.py            # Initializes Spark + orchestrates the 3 jobs
 │   └── jobs/
-│       ├── kmeans_job.py                     # Treino KMeans
-│       ├── job_kmeans_train.py               # Alternativo de treino
-│       ├── job_ml_nivel_de_alerta_train.py   # Treino RF
-│       └── job_ml_nivel_de_alerta.py         # Inferência RF
+│       ├── kmeans_job.py                     # KMeans training
+│       ├── job_kmeans_train.py               # Alternative training job
+│       ├── job_ml_nivel_de_alerta_train.py   # RF training
+│       └── job_ml_nivel_de_alerta.py         # RF inference
 ├── dags/
-│   └── pipeline_main.py       # DAG Airflow com 4 tasks principais
+│   └── pipeline_main.py       # Airflow DAG with 4 main tasks
 ├── data/
-│   └── data_Historic.csv      # Dados históricos (ingestão)
+│   └── data_Historic.csv      # Historical data (ingestion)
 ├── Docker*.yml                # 4 Dockerfiles (airflow, dbt, ingestion, pyspark)
-├── Docker-compose.yml         # Orquestração de containers
-├── main.py                    # Entry point ingestão
-├── pyproject.toml             # Dependências
-├── profiles.yml               # Config dbt
+├── Docker-compose.yml         # Container orchestration
+├── main.py                    # Ingestion entry point
+├── pyproject.toml             # Dependencies
+├── profiles.yml               # dbt config
 └── README.md
 ```
  
-**Convenções de organização**:
-- Código Python de domínio (`src/`) é desacoplado de jobs de execução (`pyspark_jobs/`).
-- Modelos dbt são separados por camada em subpastas (`raw/`, `silver_gold/`), refletindo a Medallion Architecture no próprio filesystem.
-- Cada serviço (Airflow, dbt, ingestão, PySpark) possui seu próprio Dockerfile, evitando conflito de dependências entre ambientes.
+**Organizational conventions**:
+- Domain Python code (`src/`) is decoupled from execution jobs (`pyspark_jobs/`).
+- dbt models are separated by layer into subfolders (`raw/`, `silver_gold/`), reflecting the Medallion Architecture in the filesystem itself.
+- Each service (Airflow, dbt, ingestion, PySpark) has its own Dockerfile, avoiding dependency conflicts between environments.
+- The PySpark jobs directory (`pyspark_jobs/`) is the only component that communicates directly with the external **MLflow** tracking server (`http://localhost:5001`); no other layer logs to MLflow.
 ---
  
-<h2 id="-decisões-técnicas-justificadas">🎯 Decisões Técnicas Justificadas</h2>
+<h2 id="-justified-technical-decisions">🎯 Justified Technical Decisions</h2>
  
-| Decisão | Justificativa |
+| Decision | Justification |
 |---|---|
-| **Supabase** vs BigQuery/Snowflake | PostgreSQL real com dbt-postgres nativo e API REST simples para ingestão, sem overhead de infraestrutura analítica dedicada |
-| **dbt** vs Python para Silver | SQL declarativo, versionamento de modelos e testes (`dbt test`) nativos reduzem bugs em transformações repetitivas |
-| **Encoding cíclico** (sin/cos) vs one-hot | Captura a continuidade sazonal corretamente — dezembro e janeiro ficam matematicamente próximos, o que one-hot não representa |
-| **KMeans com k=3** | Necessidade de negócio de exatamente 3 níveis de alerta: Baixo, Moderado, Severo |
-| **Random Forest** vs Logistic Regression | Robusto a outliers e capaz de capturar interações não lineares entre variáveis climáticas |
-| **ABC para ingestão** | Extensibilidade: adicionar uma nova fonte de dados é implementar uma classe, sem tocar no código existente |
-| **Classe `Predicate`** | Paraleliza leitura JDBC dividindo o range temporal em 10 predicados, evitando full-scan single-thread |
-| **DockerOperator por task** | Isola dependências de cada etapa (dbt vs PySpark têm stacks conflitantes) sem exigir imagem única monolítica |
+| **Supabase** vs BigQuery/Snowflake | Real PostgreSQL with native dbt-postgres and a simple REST API for ingestion, without dedicated analytical infrastructure overhead |
+| **dbt** vs Python for Silver | Declarative SQL, model versioning, and native tests (`dbt test`) reduce bugs in repetitive transformations |
+| **Cyclical encoding** (sin/cos) vs one-hot | Correctly captures seasonal continuity — December and January end up mathematically close, which one-hot cannot represent |
+| **KMeans with k=3** | Business requirement of exactly 3 alert levels: Low, Moderate, Severe |
+| **Random Forest** vs Logistic Regression | Robust to outliers and capable of capturing non-linear interactions between climate variables |
+| **ABC for ingestion** | Extensibility: adding a new data source means implementing a class, without touching existing code |
+| **`Predicate` class** | Parallelizes JDBC reads by splitting the time range into 10 predicates, avoiding a single-thread full scan |
+| **DockerOperator per task** | Isolates dependencies of each step (dbt vs PySpark have conflicting stacks) without requiring a single monolithic image |
+| **MLflow** for experiment tracking | Centralized, standalone tracking server (`localhost:5001`) that both KMeans and Random Forest PySpark jobs connect to, keeping experiment history decoupled from the Supabase data warehouse |
  
 ---
  
-<h2 id="-deployment--containerização">🐳 Deployment & Containerização</h2>
+<h2 id="-deployment--containerization">🐳 Deployment & Containerization</h2>
  
 ```mermaid
 flowchart TB
@@ -497,6 +515,7 @@ flowchart TB
     Net[("Network: minha-rede")]
     V1[("Volume: /app/parquet")]
     V2[("Volume: /app/modelos")]
+    MF[("MLflow Server<br/>localhost:5001")]
  
     C1 --- Net
     C2 --- Net
@@ -505,37 +524,41 @@ flowchart TB
     C2 -.-> V1
     C4 -.-> V1
     C4 -.-> V2
+    C4 -.tracks runs.-> MF
 ```
  
-- **4 Dockerfiles separados**: Airflow, dbt, ingestão (Python/POO) e PySpark — cada serviço isolado com suas próprias dependências.
-- **Docker Compose** orquestra a subida conjunta de todos os containers.
-- **Network customizada** `minha-rede` (bridge) conecta os serviços entre si.
-- **Volumes**: bind mounts para `/app/parquet` (cache) e `/app/modelos` (artefatos de ML), garantindo persistência entre execuções da DAG.
+- **4 separate Dockerfiles**: Airflow, dbt, ingestion (Python/OOP), and PySpark — each service isolated with its own dependencies.
+- **Docker Compose** orchestrates bringing up all containers together.
+- **Custom network** `minha-rede` (bridge) connects the services to each other.
+- **Volumes**: bind mounts for `/app/parquet` (cache) and `/app/modelos` (ML artifacts), ensuring persistence between DAG runs.
+- **MLflow tracking server**: reachable at `http://localhost:5001` from the PySpark container; it is not part of the Docker Compose network diagram above by container name, but is accessed over the host network as an external tracking backend for all training runs.
 ---
  
-<h2 id="-stack-tecnológico">📚 Stack Tecnológico</h2>
+<h2 id="-technology-stack-1">📚 Technology Stack</h2>
  
-| Componente | Tecnologia | Versão |
+| Component | Technology | Version |
 |---|---|---|
-| Linguagem | Python | 3.12+ |
-| Orquestração | Apache Airflow (DAG-based) | 3.2+ |
-| Processamento Distribuído | PySpark (MLlib) | 4.1+ |
-| Transformação | dbt (dbt-postgres) | 1.10+ |
+| Language | Python | 3.12+ |
+| Orchestration | Apache Airflow (DAG-based) | 3.2+ |
+| Distributed Processing | PySpark (MLlib) | 4.1+ |
+| Transformation | dbt (dbt-postgres) | 1.10+ |
 | Data Warehouse | Supabase (PostgreSQL) | 15+ |
-| Containerização | Docker | 4 Dockerfiles separados |
-| Gerenciamento de Dependências | uv / pip | — |
-| Driver JDBC | PostgreSQL Driver | 42.7.2 |
+| Containerization | Docker | 4 separate Dockerfiles |
+| Dependency Management | uv / pip | — |
+| JDBC Driver | PostgreSQL Driver | 42.7.2 |
+| Experiment Tracking | MLflow (tracking server at `localhost:5001`) | 3.14.0 |
  
 ---
  
-## 📈 Escalabilidade & Extensibilidade
+## 📈 Scalability & Extensibility
  
-- **Escalabilidade horizontal**: Spark distribui o processamento em 10 partições JDBC; Airflow permite adicionar workers para paralelizar DAGs.
-- **Escalabilidade de fontes**: nova fonte de dados = nova subclasse de `Datasource(ABC)`, plugável sem alterar `main.py`.
-- **Escalabilidade de modelos**: novo classificador = nova subclasse de `ML_RandomForest` (ou de `ML` diretamente), reaproveitando o contrato `treino/predict/save_model/load_model`.
-- **Cache**: resultados intermediários podem ser persistidos em Parquet local, acelerando re-treinos sem nova leitura JDBC completa.
+- **Horizontal scalability**: Spark distributes processing across 10 JDBC partitions; Airflow allows adding workers to parallelize DAGs.
+- **Source scalability**: a new data source = a new subclass of `Datasource(ABC)`, pluggable without modifying `main.py`.
+- **Model scalability**: a new classifier = a new subclass of `ML_RandomForest` (or of `ML` directly), reusing the `treino/predict/save_model/load_model` contract.
+- **Cache**: intermediate results can be persisted to local Parquet, speeding up retraining without a new full JDBC read.
+- **Experiment scalability**: since every PySpark ML job reports to the same MLflow server at `localhost:5001`, new models or hyperparameter sweeps are automatically comparable against prior runs without additional tracking setup.
 
-## 📬 Contato & Suporte
+## 📬 Contact & Support
 
 <div align="center">
 
@@ -548,5 +571,5 @@ flowchart TB
 ---
 
 <div align="center">
-<sub>Construído  por <a href="https://github.com/levi549">@levi549</a></sub>
+<sub>Built by <a href="https://github.com/levi549">@levi549</a></sub>
 </div>
