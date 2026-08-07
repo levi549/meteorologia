@@ -146,4 +146,4 @@ class IBGE_API(Datasource):
 
         except Exception as e:
             print("erro ao carregar dados do ibge no load")
-            raise 
+            raise e
