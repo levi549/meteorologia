@@ -560,9 +560,10 @@ flowchart TB
 
 ## Pratical video
 
-[Watch the video and download here](./video_demonstration.mp4)
 
-
+<a href="./video_demonstration.mp4" download="video.mp4">
+  Watch the video and download here
+</a>
 
 ## 📬 Contact & Support
 
