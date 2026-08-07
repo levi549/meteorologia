@@ -561,7 +561,7 @@ flowchart TB
 ## Pratical video
 
 
-<a href="./video_demonstration.mp4" download="video.mp4">
+<a href="./demonstration_video.mp4" download="video.mp4">
   Watch the video and download here
 </a>
 
