@@ -560,7 +560,7 @@ flowchart TB
 
 ## Pratical video
 
-[Watch the video here](./video_demonstration.mp4)
+[Watch the video and download here](./video_demonstration.mp4)
 
 
 
