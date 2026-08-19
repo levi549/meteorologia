@@ -558,7 +558,7 @@ flowchart TB
 - **Cache**: intermediate results can be persisted to local Parquet, speeding up retraining without a new full JDBC read.
 - **Experiment scalability**: since every PySpark ML job reports to the same MLflow server at `localhost:5001`, new models or hyperparameter sweeps are automatically comparable against prior runs without additional tracking setup.
 
-## Pratical video
+## Practical video
 
 
 <a href="./demonstration_video.mp4" download="video.mp4">
